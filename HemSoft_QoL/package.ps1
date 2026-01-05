@@ -3,8 +3,9 @@
 
 $ErrorActionPreference = "Stop"
 $ModName = "HemSoft_QoL"
-$Version = "1.1.0"
+$Version = "1.2.0"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$RepoRoot = Split-Path -Parent $ScriptDir
 
 Write-Host "=== HemSoft QoL Package Builder ===" -ForegroundColor Cyan
 
@@ -48,8 +49,8 @@ Copy-Item "$ScriptDir\Config\XUi\windows.xml" $XuiDir
 # README
 Copy-Item "$ScriptDir\README.md" $PackageDir
 
-# Create ZIP
-$OutputDir = Join-Path $ScriptDir "releases"
+# Create ZIP in repo-level releases folder
+$OutputDir = Join-Path $RepoRoot "releases"
 if (!(Test-Path $OutputDir)) {
     New-Item -ItemType Directory -Path $OutputDir | Out-Null
 }

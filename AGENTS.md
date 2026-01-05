@@ -92,6 +92,31 @@ dotnet build -c Release
 - Use `ViewComponent.UiTransform.localPosition` for runtime repositioning
 - Check game logs for `Type was missing` errors if controller doesn't load
 
+### Vanilla Keybindings (Don't Duplicate)
+| Key | Action |
+|-----|--------|
+| `R` | Loot All (transfers all items from container to backpack) |
+| `Shift+Click` | Transfer single stack between container/backpack |
+| `Ctrl+Click` | Split stack |
+
+### Sorting Implementation
+```csharp
+// Get non-empty items, sort alphabetically, rebuild array
+var items = container.items.Where(i => !i.IsEmpty()).ToList();
+items.Sort((a, b) => a.GetItemName().CompareTo(b.GetItemName()));
+for (int i = 0; i < container.items.Length; i++) {
+    container.items[i] = i < items.Count ? items[i] : ItemStack.Empty.Clone();
+    container.UpdateSlot(i, container.items[i]);
+}
+```
+
+### Config Pattern for Optional Hotkeys
+Empty `key=""` disables a hotkey:
+```xml
+<SortInventory modifier="LeftAlt" key="" />  <!-- Disabled -->
+<SortContainer modifier="LeftAlt" key="C" /> <!-- Enabled -->
+```
+
 ## Testing
 
 1. Build: `dotnet build -c Release`
