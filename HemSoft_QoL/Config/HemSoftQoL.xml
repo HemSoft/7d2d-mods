@@ -5,7 +5,7 @@
   Modifier keys: None, LeftAlt, RightAlt, LeftControl, RightControl, LeftShift, RightShift
   Key codes: https://docs.unity3d.com/ScriptReference/KeyCode.html
   
-  Set enabled="false" to disable a hotkey.
+  To disable a hotkey: set key="" (empty) or enabled="false"
 -->
 <HemSoftQoL>
   <Hotkeys>
@@ -18,7 +18,10 @@
     <!-- Restock: Pull items from container to fill existing stacks in your inventory -->
     <Restock enabled="true" modifier="LeftAlt" key="R" />
     
-    <!-- Loot All: Take all items from the open container (vanilla has this, but no hotkey) -->
-    <LootAll enabled="true" modifier="LeftAlt" key="Z" />
+    <!-- Sort Container: Sort items in the open container alphabetically -->
+    <SortContainer enabled="true" modifier="LeftAlt" key="C" />
+    
+    <!-- Sort Inventory: Sort items in your backpack alphabetically (leave key="" to disable) -->
+    <SortInventory enabled="true" modifier="LeftAlt" key="" />
   </Hotkeys>
 </HemSoftQoL>

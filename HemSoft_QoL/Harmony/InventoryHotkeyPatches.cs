@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 
@@ -42,10 +45,15 @@ namespace HemSoft.QoL.Patches
             {
                 InventoryActions.Restock(backpackWindow);
             }
-            // Loot All: Take everything from container
-            else if (config.LootAll.IsPressed())
+            // Sort Container: Sort items in the open container
+            else if (config.SortContainer.IsPressed())
             {
-                InventoryActions.LootAll(backpackWindow);
+                InventoryActions.SortContainer(backpackWindow);
+            }
+            // Sort Inventory: Sort items in player backpack
+            else if (config.SortInventory.IsPressed())
+            {
+                InventoryActions.SortInventory(backpackWindow);
             }
         }
     }
@@ -231,38 +239,104 @@ namespace HemSoft.QoL.Patches
         }
 
         /// <summary>
-        /// Takes all items from the container into player inventory.
+        /// Sorts items in the container alphabetically by item name.
         /// </summary>
-        public static void LootAll(XUiC_BackpackWindow backpackWindow)
+        public static void SortContainer(XUiC_BackpackWindow backpackWindow)
         {
             var xui = backpackWindow.xui;
             var container = xui.lootContainer;
-            var playerInventory = xui.PlayerInventory;
 
-            if (container == null || playerInventory == null) return;
+            if (container == null) return;
 
             var containerItems = container.items;
-            var transferCount = 0;
+            var itemList = new List<ItemStack>();
 
+            // Collect all non-empty items
             for (var i = 0; i < containerItems.Length; i++)
             {
-                var containerStack = containerItems[i];
-                if (containerStack.IsEmpty()) continue;
-
-                var countBefore = containerStack.count;
-
-                if (playerInventory.AddItem(containerStack.Clone()))
+                if (!containerItems[i].IsEmpty())
                 {
-                    transferCount += countBefore;
+                    itemList.Add(containerItems[i].Clone());
+                }
+            }
+
+            // Sort alphabetically by localized name
+            itemList.Sort((a, b) => 
+            {
+                var nameA = GetItemName(a);
+                var nameB = GetItemName(b);
+                return string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
+            });
+
+            // Clear container and refill sorted
+            for (var i = 0; i < containerItems.Length; i++)
+            {
+                if (i < itemList.Count)
+                {
+                    container.UpdateSlot(i, itemList[i]);
+                }
+                else
+                {
                     container.UpdateSlot(i, ItemStack.Empty.Clone());
                 }
             }
 
-            if (transferCount > 0)
+            PlaySound(xui, "ui_loot");
+            HemSoftQoL.Log($"Sort Container: Sorted {itemList.Count} items");
+        }
+
+        /// <summary>
+        /// Sorts items in the player's backpack alphabetically by item name.
+        /// </summary>
+        public static void SortInventory(XUiC_BackpackWindow backpackWindow)
+        {
+            var xui = backpackWindow.xui;
+            var playerInventory = xui.PlayerInventory;
+
+            if (playerInventory == null) return;
+
+            var backpackSlots = playerInventory.backpack.GetSlots();
+            var itemList = new List<ItemStack>();
+
+            // Collect all non-empty items
+            for (var i = 0; i < backpackSlots.Length; i++)
             {
-                PlaySound(xui, "ui_loot");
-                HemSoftQoL.Log($"Loot All: Took {transferCount} items");
+                if (!backpackSlots[i].IsEmpty())
+                {
+                    itemList.Add(backpackSlots[i].Clone());
+                }
             }
+
+            // Sort alphabetically by localized name
+            itemList.Sort((a, b) =>
+            {
+                var nameA = GetItemName(a);
+                var nameB = GetItemName(b);
+                return string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
+            });
+
+            // Clear backpack and refill sorted
+            for (var i = 0; i < backpackSlots.Length; i++)
+            {
+                if (i < itemList.Count)
+                {
+                    playerInventory.backpack.SetSlot(i, itemList[i], true);
+                }
+                else
+                {
+                    playerInventory.backpack.SetSlot(i, ItemStack.Empty.Clone(), true);
+                }
+            }
+
+            PlaySound(xui, "ui_loot");
+            HemSoftQoL.Log($"Sort Inventory: Sorted {itemList.Count} items");
+        }
+
+        private static string GetItemName(ItemStack stack)
+        {
+            if (stack.IsEmpty()) return string.Empty;
+            var itemClass = stack.itemValue.ItemClass;
+            return itemClass?.GetLocalizedItemName() ?? itemClass?.Name ?? string.Empty;
         }
 
         private static void PlaySound(XUi xui, string soundName)

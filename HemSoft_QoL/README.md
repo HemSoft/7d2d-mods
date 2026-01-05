@@ -16,7 +16,10 @@ Adds keyboard shortcuts for inventory management when a container is open:
 | `Alt + Q` | **Quick Stack** | Deposit items that match existing stacks in the container |
 | `Alt + X` | **Stash All** | Deposit all items from your backpack into the container |
 | `Alt + R` | **Restock** | Pull items from container to fill your existing stacks |
-| `Alt + Z` | **Loot All** | Take all items from the container |
+| `Alt + C` | **Sort Container** | Sort items in the container alphabetically |
+| `Alt + M` | **Sort Inventory** | Sort your backpack items alphabetically (disabled by default) |
+
+> **Note:** Vanilla 7D2D uses `R` to loot all from a container. The hotkeys above add features the base game lacks.
 
 ### HUD Info Panel
 Displays real-time player stats on the HUD:
@@ -57,9 +60,13 @@ Edit `Config/HemSoftQoL.xml` to customize hotkeys:
   <QuickStack enabled="true" modifier="LeftAlt" key="Q" />
   <StashAll enabled="true" modifier="LeftAlt" key="X" />
   <Restock enabled="true" modifier="LeftAlt" key="R" />
-  <LootAll enabled="true" modifier="LeftAlt" key="Z" />
+  <SortContainer enabled="true" modifier="LeftAlt" key="C" />
+  <SortInventory enabled="true" modifier="LeftAlt" key="" />
 </Hotkeys>
 ```
+
+### Disabling a Hotkey
+Set `key=""` (empty) or `enabled="false"` to disable any hotkey. By default, Sort Inventory is disabled.
 
 ### Available Modifiers
 - `None` - No modifier required
@@ -95,6 +102,11 @@ Requires .NET SDK and 7 Days to Die installed for assembly references.
 MIT License - © 2026 HemSoft Developments
 
 ## Changelog
+
+### v1.2.0
+- Replaced Loot All (redundant with vanilla R key) with Sort Container (Alt+C)
+- Added Sort Inventory (Alt+M) - disabled by default
+- Empty key config now disables the hotkey
 
 ### v1.1.0
 - Added HUD Info Panel with Level, Gamestage, Lootstage, Day, Blood Moon, Kills

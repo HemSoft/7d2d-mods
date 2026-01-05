@@ -28,7 +28,10 @@ Quality of Life mod with inventory hotkeys and HUD info panel.
 - **Alt+Q**: Quick Stack - deposits items matching existing container stacks
 - **Alt+X**: Stash All - deposits all backpack items to container
 - **Alt+R**: Restock - pulls items from container to fill partial stacks
-- **Alt+Z**: Loot All - takes everything from container
+- **Alt+C**: Sort Container - sorts container items alphabetically
+- **Alt+M**: Sort Inventory - sorts backpack items (disabled by default, enable in config)
+
+> **Note:** Vanilla uses `R` for Loot All. Set `key=""` in config to disable any hotkey.
 
 **HUD Info Panel**:
 - Displays Level, Gamestage, Lootstage, Day, Blood Moon countdown, Kills

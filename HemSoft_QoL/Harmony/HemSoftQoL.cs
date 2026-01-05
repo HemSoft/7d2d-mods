@@ -54,7 +54,8 @@ namespace HemSoft.QoL
         public HotkeyBinding QuickStack { get; set; } = new("LeftAlt", "Q");
         public HotkeyBinding StashAll { get; set; } = new("LeftAlt", "X");
         public HotkeyBinding Restock { get; set; } = new("LeftAlt", "R");
-        public HotkeyBinding LootAll { get; set; } = new("LeftAlt", "Z");
+        public HotkeyBinding SortContainer { get; set; } = new("LeftAlt", "C");
+        public HotkeyBinding SortInventory { get; set; } = new("LeftAlt", "");
 
         public static HotkeyConfig Load(string path)
         {
@@ -74,7 +75,8 @@ namespace HemSoft.QoL
                 config.QuickStack = ParseHotkey(doc, "QuickStack", config.QuickStack);
                 config.StashAll = ParseHotkey(doc, "StashAll", config.StashAll);
                 config.Restock = ParseHotkey(doc, "Restock", config.Restock);
-                config.LootAll = ParseHotkey(doc, "LootAll", config.LootAll);
+                config.SortContainer = ParseHotkey(doc, "SortContainer", config.SortContainer);
+                config.SortInventory = ParseHotkey(doc, "SortInventory", config.SortInventory);
 
                 HemSoftQoL.Log($"Configuration loaded from {path}");
             }

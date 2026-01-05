@@ -2,8 +2,8 @@
 <xml>
   <Name value="HemSoft_QoL" />
   <DisplayName value="HemSoft QoL" />
-  <Description value="Quality of Life mod - Inventory hotkeys (Quick Stack, Stash All, Restock, Loot All) and customizable HUD info panel showing Level, Gamestage, Lootstage, Day, Blood Moon countdown, and Kills." />
+  <Description value="Quality of Life mod - Inventory hotkeys (Quick Stack, Stash All, Restock, Sort) and customizable HUD info panel showing Level, Gamestage, Lootstage, Day, Blood Moon countdown, and Kills." />
   <Author value="HemSoft Developments" />
-  <Version value="1.1.0" />
-  <Website value="https://github.com/fhemmer/7d2d-mods" />
+  <Version value="1.2.0" />
+  <Website value="https://www.nexusmods.com/7daystodie/mods/9332" />
 </xml>
