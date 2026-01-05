@@ -14,25 +14,58 @@ namespace HemSoft.QoL
     {
         public static HemSoftQoL Instance { get; private set; }
         public static HotkeyConfig Config { get; private set; }
+        public static DisplayConfig DisplayConfig { get; private set; }
         public static string ModPath { get; private set; }
 
         private static readonly string ModTag = "[HemSoft QoL]";
+
+        // Config window hotkey (Alt+F12)
+        private static readonly KeyCode ConfigWindowKey = KeyCode.F12;
+        private static readonly KeyCode ConfigWindowModifier = KeyCode.LeftAlt;
 
         public void InitMod(Mod _modInstance)
         {
             Instance = this;
             ModPath = _modInstance.Path;
 
-            Log($"Initializing v1.0.0...");
+            Log($"Initializing v1.1.0...");
 
-            // Load configuration
+            // Load configurations
             Config = HotkeyConfig.Load(Path.Combine(ModPath, "Config", "HemSoftQoL.xml"));
+            DisplayConfig = DisplayConfig.Load(Path.Combine(ModPath, "Config", "InfoPanelConfig.xml"));
 
             // Apply Harmony patches
             var harmony = new Harmony("com.hemsoft.qol");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            Log($"Loaded successfully! Hotkeys active when container is open.");
+            Log($"Loaded successfully! Hotkeys active when container is open. Press Alt+F12 for settings.");
+        }
+
+        /// <summary>
+        /// Called from Update patches to check for config window hotkey.
+        /// </summary>
+        public static void CheckConfigWindowHotkey()
+        {
+            if (Input.GetKey(ConfigWindowModifier) && Input.GetKeyDown(ConfigWindowKey))
+            {
+                OpenConfigWindow();
+            }
+        }
+
+        public static void OpenConfigWindow()
+        {
+            var playerUI = LocalPlayerUI.primaryUI;
+            if (playerUI?.windowManager != null)
+            {
+                if (playerUI.windowManager.IsWindowOpen("HemSoftConfigWindow"))
+                {
+                    playerUI.windowManager.Close("HemSoftConfigWindow");
+                }
+                else
+                {
+                    playerUI.windowManager.Open("HemSoftConfigWindow", true);
+                }
+            }
         }
 
         public static void Log(string message)

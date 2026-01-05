@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  HemSoft QoL - Info Panel Display Configuration
+  
+  Set enabled="true" to show, enabled="false" to hide each element.
+-->
+<InfoPanelConfig>
+  <Display>
+    <Level enabled="true" />
+    <Gamestage enabled="true" />
+    <Lootstage enabled="true" />
+    <Day enabled="true" />
+    <BloodMoon enabled="true" />
+    <Kills enabled="true" />
+  </Display>
+</InfoPanelConfig>

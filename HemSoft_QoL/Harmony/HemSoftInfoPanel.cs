@@ -8,6 +8,7 @@ namespace HemSoft.QoL
     /// Custom HUD Info Panel controller that displays player stats.
     /// Provides data bindings for level, gamestage, day, blood moon, and kills.
     /// Supports repositioning via Alt+P + Arrow Keys.
+    /// Respects DisplayConfig for showing/hiding elements.
     /// </summary>
     public class XUiC_HemSoftInfoPanel : XUiController
     {
@@ -209,8 +210,31 @@ namespace HemSoft.QoL
 
         public override bool GetBindingValueInternal(ref string value, string bindingName)
         {
+            var displayConfig = HemSoftQoL.DisplayConfig;
+
             switch (bindingName)
             {
+                // Visibility bindings
+                case "showlevel":
+                    value = displayConfig?.ShowLevel.ToString().ToLower() ?? "true";
+                    return true;
+                case "showgamestage":
+                    value = displayConfig?.ShowGamestage.ToString().ToLower() ?? "true";
+                    return true;
+                case "showlootstage":
+                    value = displayConfig?.ShowLootstage.ToString().ToLower() ?? "true";
+                    return true;
+                case "showday":
+                    value = displayConfig?.ShowDay.ToString().ToLower() ?? "true";
+                    return true;
+                case "showbloodmoon":
+                    value = displayConfig?.ShowBloodMoon.ToString().ToLower() ?? "true";
+                    return true;
+                case "showkills":
+                    value = displayConfig?.ShowKills.ToString().ToLower() ?? "true";
+                    return true;
+
+                // Value bindings
                 case "playerlevel":
                     value = _cachedLevel > 0 ? _cachedLevel.ToString() : "1";
                     return true;

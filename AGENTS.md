@@ -125,6 +125,8 @@ Empty `key=""` disables a hotkey:
 4. Check console (F1) for `[HemSoft QoL]` log messages
 5. Check logs at `%APPDATA%\7DaysToDie\logs\` for errors
 
+> **⚠️ IMPORTANT**: Never stop or kill the game process without asking first! The user may have unsaved progress.
+
 ## Reference Resources
 
 - **SphereII.Mods (SCore)**: https://github.com/SphereII/SphereII.Mods - extensive Harmony examples

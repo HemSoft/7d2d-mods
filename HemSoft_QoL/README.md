@@ -45,6 +45,13 @@ Customize where the info panel appears on your screen:
 
 Position is saved automatically to `Config/InfoPanelPosition.xml` and persists across game sessions.
 
+### Configuration UI
+Press **`Alt + F12`** to open the settings window where you can:
+- Toggle visibility of each info panel element (Level, Gamestage, Lootstage, Day, Blood Moon, Kills)
+- View current hotkey assignments
+
+Settings are saved to `Config/InfoPanelConfig.xml`.
+
 ## Installation
 
 1. **Disable EAC** - DLL mods require Easy Anti-Cheat to be disabled (select in Steam launcher)
@@ -102,6 +109,11 @@ Requires .NET SDK and 7 Days to Die installed for assembly references.
 MIT License - © 2026 HemSoft Developments
 
 ## Changelog
+
+### v1.3.0
+- Added Configuration UI (Alt+F12) to toggle info panel elements
+- Info panel elements can now be individually shown/hidden
+- Settings saved to `Config/InfoPanelConfig.xml`
 
 ### v1.2.0
 - Replaced Loot All (redundant with vanilla R key) with Sort Container (Alt+C)
