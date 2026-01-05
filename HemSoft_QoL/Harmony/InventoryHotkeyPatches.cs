@@ -48,13 +48,12 @@ namespace HemSoft.QoL.Patches
     }
 
     /// <summary>
-    /// Inventory action implementations.
+    /// Inventory action implementations using 7D2D V2.5 APIs.
     /// </summary>
     public static class InventoryActions
     {
         /// <summary>
         /// Deposits items from player inventory that match existing stacks in the container.
-        /// Similar to the "fill existing stacks" arrow button in vanilla UI.
         /// </summary>
         public static void QuickStack(XUiC_BackpackWindow backpackWindow)
         {
@@ -64,15 +63,15 @@ namespace HemSoft.QoL.Patches
 
             if (container == null || playerInventory == null) return;
 
-            var containerItems = container.GetItems();
+            var containerItems = container.items;
             var transferCount = 0;
 
-            // Get backpack items (not toolbelt)
-            var backpack = playerInventory.GetBackpackItemStacks();
+            // Get backpack slots
+            var backpackSlots = playerInventory.backpack.GetSlots();
 
-            for (var i = 0; i < backpack.Length; i++)
+            for (var i = 0; i < backpackSlots.Length; i++)
             {
-                var playerStack = backpack[i];
+                var playerStack = backpackSlots[i];
                 if (playerStack.IsEmpty()) continue;
 
                 // Check if this item type exists in the container
@@ -83,18 +82,20 @@ namespace HemSoft.QoL.Patches
 
                     // Found a match - try to stack
                     var countBefore = playerStack.count;
-                    if (container.TryStackItem(0, playerStack))
+                    var result = container.TryStackItem(0, playerStack);
+                    
+                    if (result.anyMoved)
                     {
                         transferCount += countBefore - playerStack.count;
 
-                        // Update player inventory slot if stack was modified
+                        // Update player backpack slot
                         if (playerStack.count == 0)
                         {
-                            playerInventory.Backpack.SetItem(i, ItemStack.Empty.Clone());
+                            playerInventory.backpack.SetSlot(i, ItemStack.Empty.Clone(), true);
                         }
                         else
                         {
-                            playerInventory.Backpack.SetItem(i, playerStack);
+                            playerInventory.backpack.SetSlot(i, playerStack, true);
                         }
                     }
                     break;
@@ -109,8 +110,7 @@ namespace HemSoft.QoL.Patches
         }
 
         /// <summary>
-        /// Deposits all non-locked items from player inventory into the container.
-        /// Similar to the "stash all" arrow button in vanilla UI.
+        /// Deposits all items from player inventory into the container.
         /// </summary>
         public static void StashAll(XUiC_BackpackWindow backpackWindow)
         {
@@ -121,35 +121,33 @@ namespace HemSoft.QoL.Patches
             if (container == null || playerInventory == null) return;
 
             var transferCount = 0;
-            var backpack = playerInventory.GetBackpackItemStacks();
+            var backpackSlots = playerInventory.backpack.GetSlots();
 
-            for (var i = 0; i < backpack.Length; i++)
+            for (var i = 0; i < backpackSlots.Length; i++)
             {
-                var playerStack = backpack[i];
+                var playerStack = backpackSlots[i];
                 if (playerStack.IsEmpty()) continue;
-
-                // Skip locked slots (check if slot is locked in UI)
-                // TODO: Add locked slot check when we figure out the API
 
                 var countBefore = playerStack.count;
 
-                // Try to add to container
-                if (container.AddItem(playerStack))
-                {
-                    transferCount += countBefore;
-                    playerInventory.Backpack.SetItem(i, ItemStack.Empty.Clone());
-                }
-                else if (container.TryStackItem(0, playerStack))
+                // Try to add to container (TryStackItem or AddItem)
+                var result = container.TryStackItem(0, playerStack);
+                if (result.anyMoved)
                 {
                     transferCount += countBefore - playerStack.count;
                     if (playerStack.count == 0)
                     {
-                        playerInventory.Backpack.SetItem(i, ItemStack.Empty.Clone());
+                        playerInventory.backpack.SetSlot(i, ItemStack.Empty.Clone(), true);
                     }
                     else
                     {
-                        playerInventory.Backpack.SetItem(i, playerStack);
+                        playerInventory.backpack.SetSlot(i, playerStack, true);
                     }
+                }
+                else if (container.AddItem(playerStack))
+                {
+                    transferCount += countBefore;
+                    playerInventory.backpack.SetSlot(i, ItemStack.Empty.Clone(), true);
                 }
             }
 
@@ -162,7 +160,6 @@ namespace HemSoft.QoL.Patches
 
         /// <summary>
         /// Pulls items from container to fill existing stacks in player inventory.
-        /// Opposite of QuickStack.
         /// </summary>
         public static void Restock(XUiC_BackpackWindow backpackWindow)
         {
@@ -172,15 +169,15 @@ namespace HemSoft.QoL.Patches
 
             if (container == null || playerInventory == null) return;
 
-            var containerItems = container.GetItems();
+            var containerItems = container.items;
             var transferCount = 0;
 
             // Check player backpack for partial stacks
-            var backpack = playerInventory.GetBackpackItemStacks();
+            var backpackSlots = playerInventory.backpack.GetSlots();
 
-            for (var i = 0; i < backpack.Length; i++)
+            for (var i = 0; i < backpackSlots.Length; i++)
             {
-                var playerStack = backpack[i];
+                var playerStack = backpackSlots[i];
                 if (playerStack.IsEmpty()) continue;
 
                 var itemClass = playerStack.itemValue.ItemClass;
@@ -206,7 +203,7 @@ namespace HemSoft.QoL.Patches
                         containerStack.count -= toTransfer;
                         transferCount += toTransfer;
 
-                        playerInventory.Backpack.SetItem(i, playerStack);
+                        playerInventory.backpack.SetSlot(i, playerStack, true);
 
                         if (containerStack.count <= 0)
                         {
@@ -241,7 +238,7 @@ namespace HemSoft.QoL.Patches
 
             if (container == null || playerInventory == null) return;
 
-            var containerItems = container.GetItems();
+            var containerItems = container.items;
             var transferCount = 0;
 
             for (var i = 0; i < containerItems.Length; i++)
