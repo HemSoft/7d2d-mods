@@ -9,6 +9,7 @@ namespace HemSoft.QoL.Patches
     /// </summary>
     [HarmonyPatch(typeof(XUiC_BackpackWindow))]
     [HarmonyPatch("Update")]
+    [HarmonyPatch(new[] { typeof(float) })]
     public class InventoryHotkeyPatches
     {
         /// <summary>
