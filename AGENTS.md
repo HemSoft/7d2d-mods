@@ -22,6 +22,8 @@ This repository contains mods for **7 Days to Die V2.5** (PC/Steam). All mods us
 
 Quality of Life mod with inventory hotkeys and HUD info panel.
 
+**Nexus Mods**: https://www.nexusmods.com/7daystodie/mods/9332
+
 **Inventory Hotkeys** (when container is open):
 - **Alt+Q**: Quick Stack - deposits items matching existing container stacks
 - **Alt+X**: Stash All - deposits all backpack items to container
