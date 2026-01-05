@@ -21,7 +21,6 @@
   <PropertyGroup>
     <GamePath>C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die</GamePath>
     <ManagedPath>$(GamePath)\7DaysToDie_Data\Managed</ManagedPath>
-    <HarmonyPath>$(GamePath)\Mods\0_TFP_Harmony</HarmonyPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -49,9 +48,9 @@
       <Private>false</Private>
     </Reference>
     
-    <!-- Harmony (V2.5 ships via 0_TFP_Harmony mod) -->
+    <!-- Harmony (bundled with 7D2D in Mods folder) -->
     <Reference Include="0Harmony">
-      <HintPath>$(HarmonyPath)\0Harmony.dll</HintPath>
+      <HintPath>$(GamePath)\Mods\0_TFP_Harmony\0Harmony.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

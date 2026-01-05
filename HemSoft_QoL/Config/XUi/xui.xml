@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- HemSoft QoL - XUi Window Group Registration -->
+<configs>
+    <!-- Register our config window as a window group in the default ruleset -->
+    <append xpath="/xui/ruleset[@name='default']">
+        <window_group name="HemSoftConfigWindow">
+            <window name="HemSoftConfigWindow" />
+        </window_group>
+    </append>
+</configs>

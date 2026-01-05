@@ -20,13 +20,7 @@ namespace HemSoft.QoL.Patches
         /// </summary>
         public static void Postfix(XUiController __instance)
         {
-            // Check for config window hotkey on any controller (but only once per frame)
-            if (__instance is XUiC_BackpackWindow || __instance is XUiC_HUDStatBar)
-            {
-                HemSoftQoL.CheckConfigWindowHotkey();
-            }
-
-            // Only process backpack windows for inventory hotkeys
+            // Only process backpack windows
             if (__instance is not XUiC_BackpackWindow backpackWindow) return;
             
             // Only process when game is running and a container is open
