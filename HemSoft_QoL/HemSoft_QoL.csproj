@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>HemSoft_QoL</AssemblyName>
+    <RootNamespace>HemSoft.QoL</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    
+    <!-- Output directly to mod folder -->
+    <OutputPath>bin\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <!-- 
+    7D2D Game References 
+    Update these paths to match your 7D2D installation.
+  -->
+  <PropertyGroup>
+    <GamePath>C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die</GamePath>
+    <ManagedPath>$(GamePath)\7DaysToDie_Data\Managed</ManagedPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Unity Engine -->
+    <Reference Include="UnityEngine">
+      <HintPath>$(ManagedPath)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ManagedPath)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    
+    <!-- 7D2D Core -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(ManagedPath)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    
+    <!-- Harmony (bundled with 7D2D) -->
+    <Reference Include="0Harmony">
+      <HintPath>$(ManagedPath)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Copy DLL to mod folder after build -->
+  <Target Name="CopyToModFolder" AfterTargets="Build">
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" 
+          DestinationFolder="$(ProjectDir)" 
+          SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>
