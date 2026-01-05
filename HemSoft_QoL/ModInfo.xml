@@ -2,8 +2,8 @@
 <xml>
   <Name value="HemSoft_QoL" />
   <DisplayName value="HemSoft QoL" />
-  <Description value="Quality of Life improvements for 7 Days to Die - adds keyboard shortcuts for inventory management and more." />
+  <Description value="Quality of Life mod - Inventory hotkeys (Quick Stack, Stash All, Restock, Loot All) and customizable HUD info panel showing Level, Gamestage, Lootstage, Day, Blood Moon countdown, and Kills." />
   <Author value="HemSoft Developments" />
-  <Version value="1.0.0" />
+  <Version value="1.1.0" />
   <Website value="https://github.com/fhemmer/7d2d-mods" />
 </xml>

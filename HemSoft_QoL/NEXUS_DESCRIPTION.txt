@@ -1,0 +1,88 @@
+# Nexus Mods Description
+# Copy this BBCode to the Nexus mod description field
+
+[center][size=5][b]HemSoft QoL[/b][/size]
+[i]Quality of Life improvements for 7 Days to Die V2.5[/i][/center]
+
+[size=4][b]Features[/b][/size]
+
+[b]Inventory Hotkeys[/b]
+Adds keyboard shortcuts for inventory management when a container is open:
+
+[list]
+[*][b]Alt+Q[/b] - Quick Stack: Deposit items that match existing stacks in the container
+[*][b]Alt+X[/b] - Stash All: Deposit all items from your backpack into the container
+[*][b]Alt+R[/b] - Restock: Pull items from container to fill your existing stacks
+[*][b]Alt+Z[/b] - Loot All: Take all items from the container
+[/list]
+
+[b]HUD Info Panel[/b]
+Displays real-time player stats on your HUD:
+
+[list]
+[*][b]Level[/b] - Your current player level
+[*][b]Gamestage[/b] - Affects enemy difficulty and spawns
+[*][b]Lootstage[/b] - Affects loot quality (like SMX showed in 1.0!)
+[*][b]Day[/b] - Current in-game day
+[*][b]Blood Moon[/b] - Countdown to next blood moon horde
+[*][b]Kills[/b] - Total zombie kills
+[/list]
+
+[b]Panel Positioning[/b]
+Move the info panel anywhere on your screen:
+
+[list]
+[*][b]Alt+P[/b] - Toggle position mode
+[*][b]Arrow Keys[/b] - Move panel (hold Shift for faster)
+[*][b]Alt+P[/b] again - Save position and exit
+[/list]
+Position is saved and persists across game sessions!
+
+[size=4][b]Installation[/b][/size]
+
+[list=1]
+[*]Download and extract the mod
+[*]Copy the [b]HemSoft_QoL[/b] folder to your [code]7 Days to Die/Mods/[/code] directory
+[*]Launch the game with [b]EAC DISABLED[/b] (select in Steam launcher)
+[/list]
+
+[size=4][b]Configuration[/b][/size]
+
+All hotkeys can be customized by editing [code]Config/HemSoftQoL.xml[/code]
+
+[size=4][b]Requirements[/b][/size]
+
+[list]
+[*]7 Days to Die V2.5+
+[*]EAC must be disabled (required for DLL mods)
+[/list]
+
+[size=4][b]Compatibility[/b][/size]
+
+[list]
+[*]Should be compatible with most other mods
+[*]Works in single player and multiplayer (all players need the mod)
+[*]Compatible with SMX UI (info panel can be repositioned to avoid overlap)
+[/list]
+
+[size=4][b]Credits[/b][/size]
+
+Developed by [b]HemSoft Developments[/b]
+Inspired by inventory management features from games like Terraria
+
+[url=https://github.com/fhemmer/7d2d-mods]Source Code on GitHub[/url]
+
+[size=4][b]Changelog[/b][/size]
+
+[b]v1.1.0[/b]
+[list]
+[*]Added HUD Info Panel with Level, Gamestage, Lootstage, Day, Blood Moon, Kills
+[*]Added panel repositioning with Alt+P and arrow keys
+[*]Position persists across game sessions
+[/list]
+
+[b]v1.0.0[/b]
+[list]
+[*]Initial release
+[*]Inventory hotkeys: Quick Stack, Stash All, Restock, Loot All
+[/list]

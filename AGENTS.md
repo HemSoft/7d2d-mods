@@ -14,23 +14,31 @@ This repository contains mods for **7 Days to Die V2.5** (PC/Steam). All mods us
 - **Managed DLLs**: `{GamePath}\7DaysToDie_Data\Managed`
 - **Harmony DLL**: `{GamePath}\Mods\0_TFP_Harmony\0Harmony.dll` (V2.5 ships Harmony as a mod)
 - **Mods Folder**: `{GamePath}\Mods`
+- **Game Logs**: `%APPDATA%\7DaysToDie\logs\`
 
 ## Mods
 
 ### HemSoft_QoL
 
-Quality of Life inventory hotkeys mod.
+Quality of Life mod with inventory hotkeys and HUD info panel.
 
-**Features**:
+**Inventory Hotkeys** (when container is open):
 - **Alt+Q**: Quick Stack - deposits items matching existing container stacks
 - **Alt+X**: Stash All - deposits all backpack items to container
 - **Alt+R**: Restock - pulls items from container to fill partial stacks
 - **Alt+Z**: Loot All - takes everything from container
 
+**HUD Info Panel**:
+- Displays Level, Gamestage, Lootstage, Day, Blood Moon countdown, Kills
+- **Alt+P**: Toggle position mode (Arrow Keys to move, Shift for faster)
+- Position saved to `Config/InfoPanelPosition.xml`
+
 **Key Files**:
 - `HemSoft_QoL/Harmony/HemSoftQoL.cs` - IModApi entry point, config loading
 - `HemSoft_QoL/Harmony/InventoryHotkeyPatches.cs` - Harmony patches and inventory logic
+- `HemSoft_QoL/Harmony/HemSoftInfoPanel.cs` - XUiController for HUD panel
 - `HemSoft_QoL/Config/HemSoftQoL.xml` - User-configurable hotkey bindings
+- `HemSoft_QoL/Config/XUi/windows.xml` - XUi panel definition (appends to HUD)
 - `HemSoft_QoL/ModInfo.xml` - Mod metadata for game loader
 
 **Build & Deploy**:
@@ -50,7 +58,7 @@ dotnet build -c Release
 ### Inventory/Container Classes
 | Class | Purpose |
 |-------|---------|
-| `XUiC_BackpackWindow` | Player backpack UI - patch `Update` for hotkey input |
+| `XUiC_BackpackWindow` | Player backpack UI - patch `XUiController.Update` for hotkey input |
 | `XUi.lootContainer` | Currently open container (`ITileEntityLootable`) |
 | `XUi.PlayerInventory` | Player inventory model |
 | `ITileEntityLootable.items` | Direct array access to container slots |
@@ -58,11 +66,26 @@ dotnet build -c Release
 | `ITileEntityLootable.UpdateSlot()` | Update a specific container slot |
 | `Bag.GetSlots()` / `Bag.SetSlot()` | Backpack slot access |
 
+### Player Stats Access
+| Property | Access |
+|----------|--------|
+| Level | `player.Progression?.Level` |
+| Gamestage | `player.gameStage` |
+| Lootstage | `player.GetHighestPartyLootStage(0f, 0f)` |
+| Day | `GameUtils.WorldTimeToDays(world.worldTime)` |
+| Blood Moon Freq | `GamePrefs.GetInt(EnumGamePrefs.BloodMoonFrequency)` |
+
 ### Important Notes
 - `TryStackItem()` returns a **tuple**, not a bool - use `.anyMoved` or `.allMoved`
 - Harmony is located in `Mods\0_TFP_Harmony`, not in Managed folder
 - EAC must be disabled to run DLL mods
 - Use `Input.GetKey()` / `Input.GetKeyDown()` for hotkey detection
+
+### XUi Controller Notes
+- Override `GetBindingValueInternal` (NOT `GetBindingValue`) for custom bindings
+- Controller XML attribute requires **full namespace**: `Namespace.ClassName, AssemblyName`
+- Use `ViewComponent.UiTransform.localPosition` for runtime repositioning
+- Check game logs for `Type was missing` errors if controller doesn't load
 
 ## Testing
 
@@ -70,7 +93,7 @@ dotnet build -c Release
 2. Deploy: `.\deploy.ps1` (or manually copy to Mods folder)
 3. Launch 7D2D with **EAC disabled** (select in launcher)
 4. Check console (F1) for `[HemSoft QoL]` log messages
-5. Open any container and test hotkeys
+5. Check logs at `%APPDATA%\7DaysToDie\logs\` for errors
 
 ## Reference Resources
 

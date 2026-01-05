@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- HemSoft QoL - Custom HUD Info Panel -->
+<configs>
+    <!-- Append our info panel to the HUDLeftStatBars window -->
+    <append xpath="/windows/window[@name='HUDLeftStatBars']">
+        <!-- Info Panel - positioned to the right of the stat bars -->
+        <rect name="hemsoft_info_panel" controller="HemSoft.QoL.XUiC_HemSoftInfoPanel, HemSoft_QoL"
+              pos="190,140" width="140" height="150">
+            
+            <!-- Solid dark background with visible border -->
+            <sprite depth="1" name="background" sprite="ui_game_panel_background" 
+                    color="20,20,25,230" pos="0,0" width="140" height="150" />
+            <sprite depth="2" name="border" sprite="ui_game_panel_header" 
+                    color="80,80,90,255" pos="0,0" width="140" height="150" />
+            
+            <!-- Title bar -->
+            <sprite depth="3" name="titlebar" sprite="menu_empty" 
+                    color="50,50,60,255" pos="2,-2" width="136" height="22" />
+            <label depth="4" pos="5,-4" width="130" height="20" 
+                   font_size="16" color="255,255,255,255" text="Player Info" 
+                   justify="center" font="ReferenceFont" />
+            
+            <!-- Level Row -->
+            <label depth="4" pos="8,-28" width="60" height="20" 
+                   font_size="14" color="180,180,180,255" text="Level" />
+            <label depth="4" name="levelValue" pos="70,-28" width="62" height="20" 
+                   font_size="16" color="100,255,100,255" text="{playerlevel}" 
+                   justify="right" font="ReferenceFont" />
+            
+            <!-- Gamestage Row -->
+            <label depth="4" pos="8,-48" width="70" height="20" 
+                   font_size="14" color="180,180,180,255" text="Gamestage" />
+            <label depth="4" name="gamestageValue" pos="80,-48" width="52" height="20" 
+                   font_size="16" color="255,220,100,255" text="{gamestage}" 
+                   justify="right" font="ReferenceFont" />
+            
+            <!-- Lootstage Row -->
+            <label depth="4" pos="8,-68" width="70" height="20" 
+                   font_size="14" color="180,180,180,255" text="Lootstage" />
+            <label depth="4" name="lootstageValue" pos="80,-68" width="52" height="20" 
+                   font_size="16" color="255,180,50,255" text="{lootstage}" 
+                   justify="right" font="ReferenceFont" />
+            
+            <!-- Day Row -->
+            <label depth="4" pos="8,-88" width="60" height="20" 
+                   font_size="14" color="180,180,180,255" text="Day" />
+            <label depth="4" name="dayValue" pos="70,-88" width="62" height="20" 
+                   font_size="16" color="100,200,255,255" text="{currentday}" 
+                   justify="right" font="ReferenceFont" />
+            
+            <!-- Blood Moon Row -->
+            <label depth="4" pos="8,-108" width="75" height="20" 
+                   font_size="14" color="180,180,180,255" text="Blood Moon" />
+            <label depth="4" name="bloodmoonValue" pos="85,-108" width="47" height="20" 
+                   font_size="14" color="{bloodmooncolor}" text="{bloodmoontext}" 
+                   justify="right" font="ReferenceFont" />
+            
+            <!-- Kills Row -->
+            <label depth="4" pos="8,-128" width="60" height="20" 
+                   font_size="14" color="180,180,180,255" text="Kills" />
+            <label depth="4" name="killsValue" pos="70,-128" width="62" height="20" 
+                   font_size="16" color="255,100,100,255" text="{zombiekills}" 
+                   justify="right" font="ReferenceFont" />
+        </rect>
+    </append>
+</configs>

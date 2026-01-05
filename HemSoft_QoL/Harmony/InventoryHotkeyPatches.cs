@@ -5,22 +5,24 @@ namespace HemSoft.QoL.Patches
 {
     /// <summary>
     /// Harmony patches for inventory hotkey functionality.
-    /// Hooks into XUiC_BackpackWindow.Update to check for hotkey presses.
+    /// Hooks into XUiController.Update and filters for backpack window instances.
     /// </summary>
-    [HarmonyPatch(typeof(XUiC_BackpackWindow))]
+    [HarmonyPatch(typeof(XUiController))]
     [HarmonyPatch("Update")]
-    [HarmonyPatch(new[] { typeof(float) })]
     public class InventoryHotkeyPatches
     {
         /// <summary>
-        /// Called every frame when backpack window is active.
-        /// Checks for hotkey presses and triggers inventory actions.
+        /// Called every frame for any XUiController update.
+        /// Filters to only process XUiC_BackpackWindow instances.
         /// </summary>
-        public static void Postfix(XUiC_BackpackWindow __instance)
+        public static void Postfix(XUiController __instance)
         {
+            // Only process backpack windows
+            if (__instance is not XUiC_BackpackWindow backpackWindow) return;
+            
             // Only process when game is running and a container is open
             if (!XUi.IsGameRunning()) return;
-            if (__instance.xui?.lootContainer == null) return;
+            if (backpackWindow.xui?.lootContainer == null) return;
 
             var config = HemSoftQoL.Config;
             if (config == null) return;
@@ -28,22 +30,22 @@ namespace HemSoft.QoL.Patches
             // Quick Stack: Deposit items matching existing stacks in container
             if (config.QuickStack.IsPressed())
             {
-                InventoryActions.QuickStack(__instance);
+                InventoryActions.QuickStack(backpackWindow);
             }
             // Stash All: Deposit all non-locked items
             else if (config.StashAll.IsPressed())
             {
-                InventoryActions.StashAll(__instance);
+                InventoryActions.StashAll(backpackWindow);
             }
             // Restock: Pull items from container to fill inventory stacks
             else if (config.Restock.IsPressed())
             {
-                InventoryActions.Restock(__instance);
+                InventoryActions.Restock(backpackWindow);
             }
             // Loot All: Take everything from container
             else if (config.LootAll.IsPressed())
             {
-                InventoryActions.LootAll(__instance);
+                InventoryActions.LootAll(backpackWindow);
             }
         }
     }
