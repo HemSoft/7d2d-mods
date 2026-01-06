@@ -10,7 +10,7 @@
 <HemSoftQoL>
   <Hotkeys>
     <!-- Quick Stack: Deposit items that match existing stacks in the open container -->
-    <QuickStack enabled="true" modifier="LeftAlt" key="Q" />
+    <QuickStack enabled="true" modifier="None" key="Q" />
     
     <!-- Stash All: Deposit all non-locked inventory items into the open container -->
     <StashAll enabled="true" modifier="LeftAlt" key="X" />
@@ -18,7 +18,10 @@
     <!-- Restock: Pull items from container to fill existing stacks in your inventory -->
     <Restock enabled="true" modifier="LeftAlt" key="R" />
     
-    <!-- Loot All: Take all items from the open container (vanilla has this, but no hotkey) -->
-    <LootAll enabled="true" modifier="LeftAlt" key="Z" />
+    <!-- Sort Container: Sort items in the open container alphabetically -->
+    <SortContainer enabled="true" modifier="None" key="S" />
+    
+    <!-- Sort Inventory: Sort items in your backpack alphabetically (disabled by default) -->
+    <SortInventory enabled="false" modifier="LeftAlt" key="M" />
   </Hotkeys>
 </HemSoftQoL>

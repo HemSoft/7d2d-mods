@@ -1,99 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- HemSoft QoL - Custom HUD Info Panel and Config Window -->
-<!-- Type 'hemsoft' or 'hs' in console (F1) to open settings -->
+<!-- HemSoft QoL - Custom HUD Info Panel -->
+<!-- Use console commands to configure: hs level, hs gamestage, etc. -->
 <configs>
-    <!-- Config window definition - following SCore's working pattern -->
-    <append xpath="/windows">
-        <window name="HemSoftConfigWindow" depth="99" pos="0,210" width="400" height="420" 
-                anchor="CenterCenter" cursor_area="true" controller="XUiC_HemSoftConfigWindow, HemSoft_QoL">
-            
-            <!-- Click capture and dimming layers (SCore pattern) -->
-            <panel depth="2" createuipanel="true" disableautobackground="true">
-                <!-- Captures clicks outside dialog to close -->
-                <panel name="outclick" pos="-2000,2000" width="8000" height="8000" depth="1" 
-                       createuipanel="true" on_press="true" disableautobackground="true" 
-                       gamepad_selectable="false"/>
-                
-                <!-- Dimming background -->
-                <panel name="noclick" depth="2" createuipanel="true" on_press="true" 
-                       pos="-2000,2000" width="8000" height="8000" disableautobackground="true" 
-                       gamepad_selectable="false">
-                    <texture name="bgTexture" depth="0" texture="Textures/UI/news_background" 
-                             color="255,255,255,200" anchor_left="#cam,0,-5" anchor_right="#cam,1,5" 
-                             anchor_bottom="#cam,0,-5" anchor_top="#cam,1,5"/>
-                </panel>
-                
-                <!-- Content panel -->
-                <panel name="content" pos="0,-210" width="400" height="420" depth="10" pivot="center"
-                       createuipanel="true" disableautobackground="true">
-                    
-                    <!-- Title -->
-                    <label depth="16" name="header.name" pos="0,200" width="380" pivot="center" 
-                           justify="center" style="label_outline" text="HemSoft QoL Settings" 
-                           font_size="24" overflow="ShrinkContent" upper_case="true"/>
-                    
-                    <!-- Toggle buttons in a grid -->
-                    <grid name="toggleGrid" depth="10" pos="-170,170" cols="1" width="360" 
-                          cell_width="360" cell_height="38" arrangement="vertical" repeat_content="false">
-                        
-                        <!-- Section header -->
-                        <label style="label_outline" text="Info Panel Display" 
-                               width="360" height="28" font_size="20" color="255,220,100,255"/>
-                        
-                        <!-- Toggles -->
-                        <togglebutton name="toggleLevel" caption="Show Level" 
-                                      width="340" height="32" depth="12" font_size="18"
-                                      effect="Outline8" effect_distance="1,1" effect_color="20,20,20,230"/>
-                        <togglebutton name="toggleGamestage" caption="Show Gamestage" 
-                                      width="340" height="32" depth="12" font_size="18"
-                                      effect="Outline8" effect_distance="1,1" effect_color="20,20,20,230"/>
-                        <togglebutton name="toggleLootstage" caption="Show Lootstage" 
-                                      width="340" height="32" depth="12" font_size="18"
-                                      effect="Outline8" effect_distance="1,1" effect_color="20,20,20,230"/>
-                        <togglebutton name="toggleDay" caption="Show Day" 
-                                      width="340" height="32" depth="12" font_size="18"
-                                      effect="Outline8" effect_distance="1,1" effect_color="20,20,20,230"/>
-                        <togglebutton name="toggleBloodMoon" caption="Show Blood Moon" 
-                                      width="340" height="32" depth="12" font_size="18"
-                                      effect="Outline8" effect_distance="1,1" effect_color="20,20,20,230"/>
-                        <togglebutton name="toggleKills" caption="Show Kills" 
-                                      width="340" height="32" depth="12" font_size="18"
-                                      effect="Outline8" effect_distance="1,1" effect_color="20,20,20,230"/>
-                        
-                        <!-- Spacer -->
-                        <rect height="10"/>
-                        
-                        <!-- Hotkeys section -->
-                        <label style="label_outline" text="Hotkeys" 
-                               width="360" height="28" font_size="20" color="255,220,100,255"/>
-                        <label text="Edit Config/HemSoftQoL.xml to change hotkeys" 
-                               width="340" height="24" font_size="14" color="180,180,180,255"/>
-                        
-                        <!-- Spacer -->
-                        <rect height="10"/>
-                        
-                        <!-- Buttons -->
-                        <simplebutton name="btnSave" depth="12" width="340" height="36" 
-                                      font_size="20" caption="Save" upper_case="true"/>
-                        <simplebutton name="btnCancel" depth="12" width="340" height="36" 
-                                      font_size="20" caption="Cancel" upper_case="true"/>
-                    </grid>
-                </panel>
-            </panel>
-        </window>
-    </append>
-    
     <!-- Append our info panel to the HUDLeftStatBars window -->
     <append xpath="/windows/window[@name='HUDLeftStatBars']">
         <!-- Info Panel - positioned to the right of the stat bars -->
-        <rect name="hemsoft_info_panel" controller="HemSoft.QoL.XUiC_HemSoftInfoPanel, HemSoft_QoL"
-              pos="190,140" width="140" height="150">
+        <rect name="hemsoft_info_panel" controller="XUiC_HemSoftInfoPanel, HemSoft_QoL"
+              pos="190,170" width="140" height="190">
             
             <!-- Solid dark background with visible border -->
             <sprite depth="1" name="background" sprite="ui_game_panel_background" 
-                    color="20,20,25,230" pos="0,0" width="140" height="150" />
+                    color="20,20,25,230" pos="0,0" width="140" height="190" />
             <sprite depth="2" name="border" sprite="ui_game_panel_header" 
-                    color="80,80,90,255" pos="0,0" width="140" height="150" />
+                    color="80,80,90,255" pos="0,0" width="140" height="190" />
             
             <!-- Title bar -->
             <sprite depth="3" name="titlebar" sprite="menu_empty" 
@@ -143,7 +62,7 @@
                 <label depth="4" pos="8,0" width="75" height="20" 
                        font_size="14" color="180,180,180,255" text="Blood Moon" />
                 <label depth="4" name="bloodmoonValue" pos="85,0" width="47" height="20" 
-                       font_size="14" color="{bloodmooncolor}" text="{bloodmoontext}" 
+                       font_size="16" color="{bloodmooncolor}" text="{bloodmoontext}" 
                        justify="right" font="ReferenceFont" />
             </rect>
             
@@ -153,6 +72,24 @@
                        font_size="14" color="180,180,180,255" text="Kills" />
                 <label depth="4" name="killsValue" pos="70,0" width="62" height="20" 
                        font_size="16" color="255,100,100,255" text="{zombiekills}" 
+                       justify="right" font="ReferenceFont" />
+            </rect>
+            
+            <!-- Nearest Enemy Row -->
+            <rect name="enemyRow" pos="0,-148" width="140" height="20" visible="{shownearestenemy}">
+                <label depth="4" pos="8,0" width="60" height="20" 
+                       font_size="14" color="180,180,180,255" text="Nearest" />
+                <label depth="4" name="enemyValue" pos="70,0" width="62" height="20" 
+                       font_size="16" color="{nearestenemycolor}" text="{nearestenemy}" 
+                       justify="right" font="ReferenceFont" />
+            </rect>
+            
+            <!-- Enemy Count Row -->
+            <rect name="enemyCountRow" pos="0,-168" width="140" height="20" visible="{shownearestenemy}">
+                <label depth="4" pos="8,0" width="60" height="20" 
+                       font_size="14" color="180,180,180,255" text="Enemies" />
+                <label depth="4" name="enemyCountValue" pos="70,0" width="62" height="20" 
+                       font_size="16" color="{enemycountcolor}" text="{enemycount}" 
                        justify="right" font="ReferenceFont" />
             </rect>
         </rect>

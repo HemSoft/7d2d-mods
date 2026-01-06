@@ -18,31 +18,40 @@ This repository contains mods for **7 Days to Die V2.5** (PC/Steam). All mods us
 
 ## Mods
 
-### HemSoft_QoL
+### HemSoft_QoL (v1.2.0)
 
-Quality of Life mod with inventory hotkeys and HUD info panel.
+Quality of Life mod with inventory hotkeys, HUD info panel, and enemy tracking.
 
 **Nexus Mods**: https://www.nexusmods.com/7daystodie/mods/9332
 
 **Inventory Hotkeys** (when container is open):
-- **Alt+Q**: Quick Stack - deposits items matching existing container stacks
+- **Q**: Quick Stack - deposits items matching existing container stacks
 - **Alt+X**: Stash All - deposits all backpack items to container
 - **Alt+R**: Restock - pulls items from container to fill partial stacks
-- **Alt+C**: Sort Container - sorts container items alphabetically
-- **Alt+M**: Sort Inventory - sorts backpack items (disabled by default, enable in config)
+- **S**: Sort Container - sorts container items alphabetically
+- **Alt+M**: Sort Inventory - sorts backpack items (disabled by default)
 
-> **Note:** Vanilla uses `R` for Loot All. Set `key=""` in config to disable any hotkey.
+> **Note:** Vanilla uses `R` for Loot All. Set `enabled="false"` in config to disable any hotkey.
 
 **HUD Info Panel**:
 - Displays Level, Gamestage, Lootstage, Day, Blood Moon countdown, Kills
+- **Nearest Enemy**: Shows closest hostile with distance (color-coded by danger)
+- **Enemy Count**: Number of hostiles within 100m
 - **Alt+P**: Toggle position mode (Arrow Keys to move, Shift for faster)
 - Position saved to `Config/InfoPanelPosition.xml`
+
+**Console Commands** (`hs` or `hemsoft`):
+- `hs` - Show current settings and hotkey configuration
+- `hs level` / `hs enemy` / etc. - Toggle individual panel elements
+- `hs all` / `hs none` - Show/hide all panel elements
 
 **Key Files**:
 - `HemSoft_QoL/Harmony/HemSoftQoL.cs` - IModApi entry point, config loading
 - `HemSoft_QoL/Harmony/InventoryHotkeyPatches.cs` - Harmony patches and inventory logic
 - `HemSoft_QoL/Harmony/HemSoftInfoPanel.cs` - XUiController for HUD panel
+- `HemSoft_QoL/Harmony/HemSoftConfigWindow.cs` - Console command handler
 - `HemSoft_QoL/Config/HemSoftQoL.xml` - User-configurable hotkey bindings
+- `HemSoft_QoL/Config/InfoPanelConfig.xml` - Info panel display settings
 - `HemSoft_QoL/Config/XUi/windows.xml` - XUi panel definition (appends to HUD)
 - `HemSoft_QoL/ModInfo.xml` - Mod metadata for game loader
 

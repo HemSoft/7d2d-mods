@@ -2,214 +2,181 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
-using UnityEngine;
-using HarmonyLib;
 using HemSoft.QoL;
 
 /// <summary>
-/// Configuration window controller for HemSoft QoL settings.
-/// Allows toggling info panel display elements and viewing hotkey settings.
-/// NOTE: This class is intentionally NOT in a namespace because 7D2D XUi
-/// expects controller class names without namespace prefixes.
-/// </summary>
-public class XUiC_HemSoftConfigWindow : XUiController
-{
-    public static string ID = "";
-
-    private XUiC_ToggleButton _toggleLevel;
-    private XUiC_ToggleButton _toggleGamestage;
-    private XUiC_ToggleButton _toggleLootstage;
-    private XUiC_ToggleButton _toggleDay;
-    private XUiC_ToggleButton _toggleBloodMoon;
-    private XUiC_ToggleButton _toggleKills;
-
-    public override void Init()
-    {
-        base.Init();
-        ID = WindowGroup.ID;
-        HemSoftQoL.Log($"Config window Init called, ID set to: {ID}");
-
-        // Wire up outclick panel to close window when clicking outside
-        var outclick = GetChildById("outclick");
-        if (outclick != null)
-        {
-            outclick.OnPress += (sender, args) => CloseWindow();
-            HemSoftQoL.Log("Outclick handler wired up");
-        }
-
-        // Get all toggle buttons - they're in a grid, use GetChildrenByType
-        var toggles = GetChildrenByType<XUiC_ToggleButton>();
-        HemSoftQoL.Log($"Found {toggles.Length} toggle buttons");
-        
-        foreach (var toggle in toggles)
-        {
-            var id = toggle.ViewComponent?.ID ?? "unknown";
-            HemSoftQoL.Log($"Toggle found: {id}");
-            
-            switch (id)
-            {
-                case "toggleLevel": _toggleLevel = toggle; break;
-                case "toggleGamestage": _toggleGamestage = toggle; break;
-                case "toggleLootstage": _toggleLootstage = toggle; break;
-                case "toggleDay": _toggleDay = toggle; break;
-                case "toggleBloodMoon": _toggleBloodMoon = toggle; break;
-                case "toggleKills": _toggleKills = toggle; break;
-            }
-        }
-
-        // Wire up buttons - also need to search recursively
-        var buttons = GetChildrenByType<XUiC_SimpleButton>();
-        HemSoftQoL.Log($"Found {buttons.Length} simple buttons");
-        
-        foreach (var btn in buttons)
-        {
-            var id = btn.ViewComponent?.ID ?? "unknown";
-            HemSoftQoL.Log($"Button found: {id}");
-            
-            if (id == "btnSave")
-            {
-                btn.OnPressed += BtnSave_OnPressed;
-                HemSoftQoL.Log("Save button wired up");
-            }
-            else if (id == "btnCancel")
-            {
-                btn.OnPressed += BtnCancel_OnPressed;
-                HemSoftQoL.Log("Cancel button wired up");
-            }
-        }
-
-        HemSoftQoL.Log("Config window controller initialized");
-    }
-
-    private void CloseWindow()
-    {
-        xui.playerUI.windowManager.Close(WindowGroup.ID);
-    }
-
-    public override void OnOpen()
-    {
-        base.OnOpen();
-
-        // Load current config values into toggles
-        var config = HemSoftQoL.DisplayConfig;
-
-        if (_toggleLevel != null) _toggleLevel.Value = config.ShowLevel;
-        if (_toggleGamestage != null) _toggleGamestage.Value = config.ShowGamestage;
-        if (_toggleLootstage != null) _toggleLootstage.Value = config.ShowLootstage;
-        if (_toggleDay != null) _toggleDay.Value = config.ShowDay;
-        if (_toggleBloodMoon != null) _toggleBloodMoon.Value = config.ShowBloodMoon;
-        if (_toggleKills != null) _toggleKills.Value = config.ShowKills;
-
-        // Pause the game while config is open
-        GameManager.Instance?.Pause(true);
-    }
-
-    public override void OnClose()
-    {
-        base.OnClose();
-        GameManager.Instance?.Pause(false);
-    }
-
-    private void BtnSave_OnPressed(XUiController sender, int mouseButton)
-    {
-        // Read values from toggles
-        var config = HemSoftQoL.DisplayConfig;
-
-        config.ShowLevel = _toggleLevel?.Value ?? true;
-        config.ShowGamestage = _toggleGamestage?.Value ?? true;
-        config.ShowLootstage = _toggleLootstage?.Value ?? true;
-        config.ShowDay = _toggleDay?.Value ?? true;
-        config.ShowBloodMoon = _toggleBloodMoon?.Value ?? true;
-        config.ShowKills = _toggleKills?.Value ?? true;
-
-        // Save to file
-        config.Save(Path.Combine(HemSoftQoL.ModPath, "Config", "InfoPanelConfig.xml"));
-
-        HemSoftQoL.Log("Config saved");
-        GameManager.ShowTooltip(xui.playerUI.entityPlayer, "Settings saved!");
-
-        // Close window
-        xui.playerUI.windowManager.Close(WindowGroup.ID);
-    }
-
-    private void BtnCancel_OnPressed(XUiController sender, int mouseButton)
-    {
-        xui.playerUI.windowManager.Close(WindowGroup.ID);
-    }
-
-    public override void Update(float _dt)
-    {
-        base.Update(_dt);
-
-        // Allow ESC to close
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            CloseWindow();
-        }
-    }
-}
-
-/// <summary>
-/// Console command to open HemSoft QoL configuration window.
-/// Usage: hemsoft (or hs)
+/// Console commands to configure HemSoft QoL mod.
+/// 
+/// Usage:
+///   hs             - Show help and current settings
+///   hs level       - Toggle Level display
+///   hs gamestage   - Toggle Gamestage display
+///   hs lootstage   - Toggle Lootstage display
+///   hs day         - Toggle Day display
+///   hs bloodmoon   - Toggle Blood Moon display
+///   hs kills       - Toggle Kills display
+///   hs enemy       - Toggle Nearest Enemy display
+///   hs all         - Show all info panel elements
+///   hs none        - Hide all info panel elements
 /// </summary>
 public class ConsoleCmdHemSoft : ConsoleCmdAbstract
 {
     public override string[] getCommands()
     {
-        return new[] { "hemsoft", "hs" };
+        return ["hemsoft", "hs"];
     }
 
     public override string getDescription()
     {
-        return "Opens HemSoft QoL configuration window";
+        return "HemSoft QoL - Configure info panel display";
     }
 
     public override string getHelp()
     {
-        return "Usage: hemsoft\n" +
-               "   or: hs\n" +
-               "Opens the HemSoft QoL settings window to configure hotkeys and info panel display.";
+        var hotkeys = HemSoftQoL.Config;
+        return $@"HemSoft QoL Configuration
+
+Usage:
+  hs              - Show current settings
+  hs level        - Toggle Level display
+  hs gamestage    - Toggle Gamestage display
+  hs lootstage    - Toggle Lootstage display
+  hs day          - Toggle Day display
+  hs bloodmoon    - Toggle Blood Moon display
+  hs kills        - Toggle Kills display
+  hs enemy        - Toggle Nearest Enemy display
+  hs all          - Show all info panel elements
+  hs none         - Hide all info panel elements
+
+Hotkey Configuration:
+  Edit Config/HemSoftQoL.xml to change hotkeys.
+
+Current Hotkeys (when container is open):
+  {FormatHotkey(hotkeys.QuickStack)} = Quick Stack (deposit matching items)
+  {FormatHotkey(hotkeys.StashAll)} = Stash All (deposit all items)
+  {FormatHotkey(hotkeys.Restock)} = Restock (pull items to fill stacks)
+  {FormatHotkey(hotkeys.SortContainer)} = Sort Container
+  {FormatHotkey(hotkeys.SortInventory)} = Sort Inventory
+";
+    }
+
+    private static string FormatHotkey(HotkeyBinding binding)
+    {
+        if (!binding.Enabled || binding.Key == UnityEngine.KeyCode.None)
+            return "Disabled";
+        return binding.ToString();
     }
 
     public override void Execute(List<string> _params, CommandSenderInfo _senderInfo)
     {
-        try
+        var config = HemSoftQoL.DisplayConfig;
+
+        if (_params.Count == 0)
         {
-            // Must be in-game
-            if (!GameManager.Instance.gameStateManager.IsGameStarted())
-            {
-                SingletonMonoBehaviour<SdtdConsole>.Instance.Output("Must be in-game to open settings.");
-                return;
-            }
-
-            var player = GameManager.Instance.World?.GetPrimaryPlayer();
-            if (player == null)
-            {
-                SingletonMonoBehaviour<SdtdConsole>.Instance.Output("No player found.");
-                return;
-            }
-
-            var ui = LocalPlayerUI.GetUIForPlayer(player);
-            if (ui == null)
-            {
-                SingletonMonoBehaviour<SdtdConsole>.Instance.Output("UI not available.");
-                return;
-            }
-
-            // Close console first
-            ui.windowManager.Close("terminal");
-
-            // Open config window
-            ui.windowManager.Open("HemSoftConfigWindow", true);
-            HemSoftQoL.Log("Config window opened via console command");
+            ShowStatus(config);
+            return;
         }
-        catch (Exception ex)
+
+        var arg = _params[0].ToLower();
+        string message;
+        switch (arg)
         {
-            SingletonMonoBehaviour<SdtdConsole>.Instance.Output($"Error: {ex.Message}");
-            HemSoftQoL.LogError($"Console command error: {ex.Message}");
+            case "level":
+                config.ShowLevel = !config.ShowLevel;
+                message = $"Level: {(config.ShowLevel ? "ON" : "OFF")}";
+                break;
+            case "gamestage":
+                config.ShowGamestage = !config.ShowGamestage;
+                message = $"Gamestage: {(config.ShowGamestage ? "ON" : "OFF")}";
+                break;
+            case "lootstage":
+                config.ShowLootstage = !config.ShowLootstage;
+                message = $"Lootstage: {(config.ShowLootstage ? "ON" : "OFF")}";
+                break;
+            case "day":
+                config.ShowDay = !config.ShowDay;
+                message = $"Day: {(config.ShowDay ? "ON" : "OFF")}";
+                break;
+            case "bloodmoon":
+                config.ShowBloodMoon = !config.ShowBloodMoon;
+                message = $"Blood Moon: {(config.ShowBloodMoon ? "ON" : "OFF")}";
+                break;
+            case "kills":
+                config.ShowKills = !config.ShowKills;
+                message = $"Kills: {(config.ShowKills ? "ON" : "OFF")}";
+                break;
+            case "enemy":
+                config.ShowNearestEnemy = !config.ShowNearestEnemy;
+                message = $"Nearest Enemy: {(config.ShowNearestEnemy ? "ON" : "OFF")}";
+                break;
+            case "all":
+                message = EnableAll(config);
+                break;
+            case "none":
+                message = DisableAll(config);
+                break;
+            default:
+                message = $"Unknown option: {arg}. Type 'hs' for help.";
+                break;
         }
+
+        // Save config
+        config.Save(Path.Combine(HemSoftQoL.ModPath, "Config", "InfoPanelConfig.xml"));
+
+        SingletonMonoBehaviour<SdtdConsole>.Instance.Output(message);
     }
+
+    private static string EnableAll(DisplayConfig config)
+    {
+        config.ShowLevel = true;
+        config.ShowGamestage = true;
+        config.ShowLootstage = true;
+        config.ShowDay = true;
+        config.ShowBloodMoon = true;
+        config.ShowKills = true;
+        config.ShowNearestEnemy = true;
+        return "All info panel elements enabled.";
+    }
+
+    private static string DisableAll(DisplayConfig config)
+    {
+        config.ShowLevel = false;
+        config.ShowGamestage = false;
+        config.ShowLootstage = false;
+        config.ShowDay = false;
+        config.ShowBloodMoon = false;
+        config.ShowKills = false;
+        config.ShowNearestEnemy = false;
+        return "All info panel elements disabled.";
+    }
+
+    private void ShowStatus(DisplayConfig config)
+    {
+        var console = SingletonMonoBehaviour<SdtdConsole>.Instance;
+        var hotkeys = HemSoftQoL.Config;
+        
+        console.Output("=== HemSoft QoL Info Panel ===");
+        console.Output($"  Level:      {OnOff(config.ShowLevel)}");
+        console.Output($"  Gamestage:  {OnOff(config.ShowGamestage)}");
+        console.Output($"  Lootstage:  {OnOff(config.ShowLootstage)}");
+        console.Output($"  Day:        {OnOff(config.ShowDay)}");
+        console.Output($"  Blood Moon: {OnOff(config.ShowBloodMoon)}");
+        console.Output($"  Kills:      {OnOff(config.ShowKills)}");
+        console.Output($"  Enemy:      {OnOff(config.ShowNearestEnemy)}");
+        console.Output("");
+        console.Output("=== Hotkeys (when container open) ===");
+        console.Output($"  Quick Stack:    {FormatHotkey(hotkeys.QuickStack)}");
+        console.Output($"  Stash All:      {FormatHotkey(hotkeys.StashAll)}");
+        console.Output($"  Restock:        {FormatHotkey(hotkeys.Restock)}");
+        console.Output($"  Sort Container: {FormatHotkey(hotkeys.SortContainer)}");
+        console.Output($"  Sort Inventory: {FormatHotkey(hotkeys.SortInventory)}");
+        console.Output("");
+        console.Output("Type 'hs <option>' to toggle. Example: hs level");
+        console.Output("Type 'hs all' or 'hs none' to show/hide all.");
+        console.Output("Edit Config/HemSoftQoL.xml to change hotkeys.");
+    }
+
+    private static string OnOff(bool value) => value ? "ON" : "OFF";
 }
 
 /// <summary>
@@ -223,6 +190,7 @@ public class DisplayConfig
     public bool ShowDay { get; set; } = true;
     public bool ShowBloodMoon { get; set; } = true;
     public bool ShowKills { get; set; } = true;
+    public bool ShowNearestEnemy { get; set; } = true;
 
     public static DisplayConfig Load(string path)
     {
@@ -245,6 +213,7 @@ public class DisplayConfig
             config.ShowDay = ParseBool(doc, "Day", true);
             config.ShowBloodMoon = ParseBool(doc, "BloodMoon", true);
             config.ShowKills = ParseBool(doc, "Kills", true);
+            config.ShowNearestEnemy = ParseBool(doc, "NearestEnemy", true);
 
             HemSoftQoL.Log($"Display config loaded from {path}");
         }
@@ -276,6 +245,7 @@ public class DisplayConfig
   HemSoft QoL - Info Panel Display Configuration
   
   Set enabled=""true"" to show, enabled=""false"" to hide each element.
+  Use console command 'hs' to toggle these settings in-game.
 ");
             doc.AppendChild(comment);
 
@@ -291,8 +261,10 @@ public class DisplayConfig
             AddDisplayElement(doc, display, "Day", ShowDay);
             AddDisplayElement(doc, display, "BloodMoon", ShowBloodMoon);
             AddDisplayElement(doc, display, "Kills", ShowKills);
+            AddDisplayElement(doc, display, "NearestEnemy", ShowNearestEnemy);
 
             doc.Save(path);
+            HemSoftQoL.Log($"Display config saved to {path}");
         }
         catch (Exception ex)
         {

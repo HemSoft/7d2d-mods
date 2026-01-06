@@ -12,5 +12,6 @@
     <Day enabled="true" />
     <BloodMoon enabled="true" />
     <Kills enabled="true" />
+    <NearestEnemy enabled="true" />
   </Display>
 </InfoPanelConfig>

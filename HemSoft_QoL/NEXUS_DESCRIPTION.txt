@@ -7,14 +7,17 @@
 [size=4][b]Features[/b][/size]
 
 [b]Inventory Hotkeys[/b]
-Adds keyboard shortcuts for inventory management when a container is open:
+Keyboard shortcuts for inventory management when a container is open:
 
 [list]
-[*][b]Alt+Q[/b] - Quick Stack: Deposit items that match existing stacks in the container
+[*][b]Q[/b] - Quick Stack: Deposit items that match existing stacks in the container
 [*][b]Alt+X[/b] - Stash All: Deposit all items from your backpack into the container
 [*][b]Alt+R[/b] - Restock: Pull items from container to fill your existing stacks
-[*][b]Alt+Z[/b] - Loot All: Take all items from the container
+[*][b]S[/b] - Sort Container: Sort container items alphabetically
+[*][b]Alt+M[/b] - Sort Inventory: Sort your backpack alphabetically (disabled by default)
 [/list]
+
+[i]Note: Vanilla uses [b]R[/b] for Loot All. All hotkeys are fully configurable![/i]
 
 [b]HUD Info Panel[/b]
 Displays real-time player stats on your HUD:
@@ -22,10 +25,20 @@ Displays real-time player stats on your HUD:
 [list]
 [*][b]Level[/b] - Your current player level
 [*][b]Gamestage[/b] - Affects enemy difficulty and spawns
-[*][b]Lootstage[/b] - Affects loot quality (like SMX showed in 1.0!)
+[*][b]Lootstage[/b] - Affects loot quality
 [*][b]Day[/b] - Current in-game day
-[*][b]Blood Moon[/b] - Countdown to next blood moon horde
+[*][b]Blood Moon[/b] - Countdown to next blood moon (color-coded!)
 [*][b]Kills[/b] - Total zombie kills
+[*][b]Nearest Enemy[/b] - Distance and name of closest hostile (color-coded by distance!)
+[*][b]Enemy Count[/b] - Number of hostiles within 100m
+[/list]
+
+[b]Console Commands[/b]
+Type [code]hs[/code] in the console (F1) to:
+[list]
+[*]View current settings and hotkey configuration
+[*]Toggle individual info panel elements on/off
+[*]Use [code]hs all[/code] or [code]hs none[/code] to show/hide all panel elements
 [/list]
 
 [b]Panel Positioning[/b]
@@ -48,7 +61,8 @@ Position is saved and persists across game sessions!
 
 [size=4][b]Configuration[/b][/size]
 
-All hotkeys can be customized by editing [code]Config/HemSoftQoL.xml[/code]
+[b]Hotkeys:[/b] Edit [code]Config/HemSoftQoL.xml[/code] to customize hotkeys or disable them.
+[b]Info Panel:[/b] Edit [code]Config/InfoPanelConfig.xml[/code] or use the [code]hs[/code] console command.
 
 [size=4][b]Requirements[/b][/size]
 
@@ -62,7 +76,7 @@ All hotkeys can be customized by editing [code]Config/HemSoftQoL.xml[/code]
 [list]
 [*]Should be compatible with most other mods
 [*]Works in single player and multiplayer (all players need the mod)
-[*]Compatible with SMX UI (info panel can be repositioned to avoid overlap)
+[*]Compatible with SMX UI and other UI overhauls (info panel can be repositioned)
 [/list]
 
 [size=4][b]Credits[/b][/size]
@@ -74,6 +88,18 @@ Inspired by inventory management features from games like Terraria
 
 [size=4][b]Changelog[/b][/size]
 
+[b]v1.2.0[/b]
+[list]
+[*]Added Nearest Enemy tracking with distance and color-coded warnings
+[*]Added Enemy Count display (hostiles within 100m)
+[*]Added Sort Container hotkey (S by default)
+[*]Added Sort Inventory hotkey (Alt+M, disabled by default)
+[*]Added [code]hs[/code] console command for settings management
+[*]Dynamic hotkey display - shows actual configured keys
+[*]Improved enemy name display (strips "zombie" and "animalzombie" prefixes)
+[*]Changed Quick Stack default to just Q (no modifier)
+[/list]
+
 [b]v1.1.0[/b]
 [list]
 [*]Added HUD Info Panel with Level, Gamestage, Lootstage, Day, Blood Moon, Kills
@@ -84,5 +110,5 @@ Inspired by inventory management features from games like Terraria
 [b]v1.0.0[/b]
 [list]
 [*]Initial release
-[*]Inventory hotkeys: Quick Stack, Stash All, Restock, Loot All
+[*]Inventory hotkeys: Quick Stack, Stash All, Restock
 [/list]
