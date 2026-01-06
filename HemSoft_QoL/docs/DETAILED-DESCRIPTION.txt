@@ -1,0 +1,51 @@
+[center][size=5][b]HemSoft QoL[/b][/size]
+[i]Quality of Life mod for 7 Days to Die V2.5[/i][/center]
+
+[size=4][b]Inventory Hotkeys[/b][/size]
+When a container is open:
+
+[list]
+[*][b]Q[/b] - Quick Stack: deposits items matching existing container stacks
+[*][b]Alt+X[/b] - Stash All: deposits all backpack items
+[*][b]Alt+R[/b] - Restock: pulls items to fill partial backpack stacks
+[*][b]S[/b] - Sort Container: sorts container items alphabetically
+[*][b]Alt+M[/b] - Sort Inventory: sorts backpack items (disabled by default)
+[/list]
+
+[i]Note: Vanilla uses [b]R[/b] for Loot All. All hotkeys are configurable in [code]Config/HemSoftQoL.xml[/code]. Set [code]enabled="false"[/code] or [code]key=""[/code] to disable any hotkey.[/i]
+
+[size=4][b]HUD Info Panel[/b][/size]
+Displays real-time stats:
+
+[list]
+[*]Level, Gamestage, Lootstage
+[*]Current Day, Blood Moon countdown
+[*]Zombie Kills
+[*]Nearest Enemy (name + distance, color-coded by danger)
+[*]Enemy Count (hostiles within 100m)
+[/list]
+
+[b]Panel Controls[/b]
+[list]
+[*][b]Alt+P[/b] - Enter position mode
+[*][b]Arrow Keys[/b] - Move panel
+[*][b]Shift[/b] - Faster movement
+[*][b]Alt+P[/b] again - Save and exit
+[/list]
+
+[b]Console Commands[/b]
+Type [code]hs[/code] in console (F1) to:
+[list]
+[*]View current settings and hotkey configuration
+[*]Toggle elements: [code]hs level[/code], [code]hs enemy[/code], [code]hs bloodmoon[/code], etc.
+[*]Show/hide all: [code]hs all[/code] or [code]hs none[/code]
+[/list]
+
+[size=4][b]Requirements[/b][/size]
+[list]
+[*]7 Days to Die V2.5
+[*]EAC disabled
+[/list]
+
+[size=4][b]Installation[/b][/size]
+Extract to [code]7 Days to Die/Mods/[/code] folder.

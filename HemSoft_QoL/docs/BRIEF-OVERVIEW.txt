@@ -1,0 +1,1 @@
+Inventory hotkeys: Q Quick Stack, Alt+X Stash All, Alt+R Restock, S Sort. HUD shows Level, Gamestage, Lootstage, Day, Blood Moon, Kills, Nearest Enemy, Enemy Count. Alt+P moves panel. 'hs' console toggles elements. V2.5, EAC disabled. Extract to Mods folder.
