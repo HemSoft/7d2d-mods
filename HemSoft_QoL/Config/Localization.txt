@@ -1,0 +1,35 @@
+Key,File,Type,UsedInMainMenu,NoTranslate,english,Context/Coverage Notes
+hemsoftqol_tab_hotkeys,HemSoftQoL,Settings,False,False,Hotkeys,Tab for inventory hotkey settings
+hemsoftqol_tab_infopanel,HemSoftQoL,Settings,False,False,Info Panel,Tab for HUD info panel settings
+hemsoftqol_cat_quickstack,HemSoftQoL,Settings,False,False,Quick Stack,Category for Quick Stack hotkey
+hemsoftqol_cat_quickstack_tt,HemSoftQoL,Settings,False,False,Deposit items that match existing stacks in the container,Tooltip for Quick Stack category
+hemsoftqol_cat_stashall,HemSoftQoL,Settings,False,False,Stash All,Category for Stash All hotkey
+hemsoftqol_cat_stashall_tt,HemSoftQoL,Settings,False,False,Deposit all inventory items into the container,Tooltip for Stash All category
+hemsoftqol_cat_restock,HemSoftQoL,Settings,False,False,Restock,Category for Restock hotkey
+hemsoftqol_cat_restock_tt,HemSoftQoL,Settings,False,False,Pull items from container to fill existing inventory stacks,Tooltip for Restock category
+hemsoftqol_cat_sortcontainer,HemSoftQoL,Settings,False,False,Sort Container,Category for Sort Container hotkey
+hemsoftqol_cat_sortcontainer_tt,HemSoftQoL,Settings,False,False,Sort items in the container alphabetically,Tooltip for Sort Container category
+hemsoftqol_cat_sortinventory,HemSoftQoL,Settings,False,False,Sort Inventory,Category for Sort Inventory hotkey
+hemsoftqol_cat_sortinventory_tt,HemSoftQoL,Settings,False,False,Sort items in your backpack alphabetically,Tooltip for Sort Inventory category
+hemsoftqol_cat_elements,HemSoftQoL,Settings,False,False,Panel Elements,Category for info panel display elements
+hemsoftqol_cat_elements_tt,HemSoftQoL,Settings,False,False,Choose which elements to display on the info panel,Tooltip for panel elements category
+hemsoftqol_enabled,HemSoftQoL,Settings,False,False,Enabled,Setting label for enabled/disabled
+hemsoftqol_enabled_tt,HemSoftQoL,Settings,False,False,Enable or disable this hotkey,Tooltip for enabled setting
+hemsoftqol_modifier,HemSoftQoL,Settings,False,False,Modifier Key,Setting label for modifier key
+hemsoftqol_modifier_tt,HemSoftQoL,Settings,False,False,Key that must be held while pressing the hotkey,Tooltip for modifier setting
+hemsoftqol_key,HemSoftQoL,Settings,False,False,Hotkey,Setting label for the key
+hemsoftqol_key_tt,HemSoftQoL,Settings,False,False,The key to press for this action,Tooltip for key setting
+hemsoftqol_show_level,HemSoftQoL,Settings,False,False,Show Level,Setting to show player level
+hemsoftqol_show_level_tt,HemSoftQoL,Settings,False,False,Display your current player level on the info panel,Tooltip for level setting
+hemsoftqol_show_gamestage,HemSoftQoL,Settings,False,False,Show Gamestage,Setting to show gamestage
+hemsoftqol_show_gamestage_tt,HemSoftQoL,Settings,False,False,Display your gamestage (affects enemy difficulty),Tooltip for gamestage setting
+hemsoftqol_show_lootstage,HemSoftQoL,Settings,False,False,Show Lootstage,Setting to show lootstage
+hemsoftqol_show_lootstage_tt,HemSoftQoL,Settings,False,False,Display your lootstage (affects loot quality),Tooltip for lootstage setting
+hemsoftqol_show_day,HemSoftQoL,Settings,False,False,Show Day,Setting to show current day
+hemsoftqol_show_day_tt,HemSoftQoL,Settings,False,False,Display the current in-game day,Tooltip for day setting
+hemsoftqol_show_bloodmoon,HemSoftQoL,Settings,False,False,Show Blood Moon,Setting to show blood moon countdown
+hemsoftqol_show_bloodmoon_tt,HemSoftQoL,Settings,False,False,Display countdown to the next blood moon,Tooltip for blood moon setting
+hemsoftqol_show_kills,HemSoftQoL,Settings,False,False,Show Kills,Setting to show zombie kills
+hemsoftqol_show_kills_tt,HemSoftQoL,Settings,False,False,Display your total zombie kills,Tooltip for kills setting
+hemsoftqol_show_enemy,HemSoftQoL,Settings,False,False,Show Nearest Enemy,Setting to show nearest enemy
+hemsoftqol_show_enemy_tt,HemSoftQoL,Settings,False,False,Display the nearest hostile and enemy count,Tooltip for enemy setting

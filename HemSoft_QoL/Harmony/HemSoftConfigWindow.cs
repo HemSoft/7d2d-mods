@@ -34,6 +34,9 @@ public class ConsoleCmdHemSoft : ConsoleCmdAbstract
     public override string getHelp()
     {
         var hotkeys = HemSoftQoL.Config;
+        var gearsNote = HemSoftQoL.GearsPresent 
+            ? "Gears detected - use Options > Mod Settings for full configuration."
+            : "Install Gears mod for in-game settings UI.";
         return $@"HemSoft QoL Configuration
 
 Usage:
@@ -48,8 +51,7 @@ Usage:
   hs all          - Show all info panel elements
   hs none         - Hide all info panel elements
 
-Hotkey Configuration:
-  Edit Config/HemSoftQoL.xml to change hotkeys.
+{gearsNote}
 
 Current Hotkeys (when container is open):
   {FormatHotkey(hotkeys.QuickStack)} = Quick Stack (deposit matching items)
@@ -181,6 +183,7 @@ Current Hotkeys (when container is open):
 
 /// <summary>
 /// Configuration for info panel display elements.
+/// Supports both Gears ModSettings.xml format and legacy InfoPanelConfig.xml format.
 /// </summary>
 public class DisplayConfig
 {
@@ -192,30 +195,39 @@ public class DisplayConfig
     public bool ShowKills { get; set; } = true;
     public bool ShowNearestEnemy { get; set; } = true;
 
-    public static DisplayConfig Load(string path)
+    private string _modPath;
+
+    /// <summary>
+    /// Load display configuration. Tries Gears ModSettings.xml first, then falls back to legacy config.
+    /// </summary>
+    public static DisplayConfig Load(string modPath)
     {
-        var config = new DisplayConfig();
+        var config = new DisplayConfig { _modPath = modPath };
+        var modSettingsPath = Path.Combine(modPath, "ModSettings.xml");
+        var legacyPath = Path.Combine(modPath, "Config", "InfoPanelConfig.xml");
 
         try
         {
-            if (!File.Exists(path))
+            // Try Gears ModSettings.xml first
+            if (File.Exists(modSettingsPath))
             {
-                HemSoftQoL.Log($"Display config not found at {path}, using defaults.");
-                return config;
+                if (TryLoadFromModSettings(modSettingsPath, config))
+                {
+                    HemSoftQoL.Log($"Display configuration loaded from ModSettings.xml (Gears)");
+                    return config;
+                }
             }
 
-            var doc = new XmlDocument();
-            doc.Load(path);
-
-            config.ShowLevel = ParseBool(doc, "Level", true);
-            config.ShowGamestage = ParseBool(doc, "Gamestage", true);
-            config.ShowLootstage = ParseBool(doc, "Lootstage", true);
-            config.ShowDay = ParseBool(doc, "Day", true);
-            config.ShowBloodMoon = ParseBool(doc, "BloodMoon", true);
-            config.ShowKills = ParseBool(doc, "Kills", true);
-            config.ShowNearestEnemy = ParseBool(doc, "NearestEnemy", true);
-
-            HemSoftQoL.Log($"Display config loaded from {path}");
+            // Fallback to legacy config
+            if (File.Exists(legacyPath))
+            {
+                LoadFromLegacyConfig(legacyPath, config);
+                HemSoftQoL.Log($"Display configuration loaded from InfoPanelConfig.xml (legacy)");
+            }
+            else
+            {
+                HemSoftQoL.Log($"No display config found, using defaults.");
+            }
         }
         catch (Exception ex)
         {
@@ -225,7 +237,65 @@ public class DisplayConfig
         return config;
     }
 
-    private static bool ParseBool(XmlDocument doc, string name, bool defaultValue)
+    /// <summary>
+    /// Load from Gears ModSettings.xml format.
+    /// </summary>
+    private static bool TryLoadFromModSettings(string path, DisplayConfig config)
+    {
+        try
+        {
+            var doc = new XmlDocument();
+            doc.Load(path);
+
+            // Find the PanelElements category in the InfoPanel tab
+            var category = doc.SelectSingleNode("//Tab[@name='InfoPanel']//Category[@name='PanelElements']");
+            if (category == null) return false;
+
+            config.ShowLevel = ParseGearsSwitch(category, "ShowLevel", true);
+            config.ShowGamestage = ParseGearsSwitch(category, "ShowGamestage", true);
+            config.ShowLootstage = ParseGearsSwitch(category, "ShowLootstage", true);
+            config.ShowDay = ParseGearsSwitch(category, "ShowDay", true);
+            config.ShowBloodMoon = ParseGearsSwitch(category, "ShowBloodMoon", true);
+            config.ShowKills = ParseGearsSwitch(category, "ShowKills", true);
+            config.ShowNearestEnemy = ParseGearsSwitch(category, "ShowNearestEnemy", true);
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Parse a Switch element from Gears ModSettings.xml format.
+    /// </summary>
+    private static bool ParseGearsSwitch(XmlNode category, string name, bool defaultValue)
+    {
+        var switchNode = category.SelectSingleNode($"Switch[@name='{name}']");
+        if (switchNode?.Attributes?["value"] == null) return defaultValue;
+
+        return switchNode.Attributes["value"].Value.ToLower() == "true";
+    }
+
+    /// <summary>
+    /// Load from legacy InfoPanelConfig.xml format.
+    /// </summary>
+    private static void LoadFromLegacyConfig(string path, DisplayConfig config)
+    {
+        var doc = new XmlDocument();
+        doc.Load(path);
+
+        config.ShowLevel = ParseLegacyBool(doc, "Level", true);
+        config.ShowGamestage = ParseLegacyBool(doc, "Gamestage", true);
+        config.ShowLootstage = ParseLegacyBool(doc, "Lootstage", true);
+        config.ShowDay = ParseLegacyBool(doc, "Day", true);
+        config.ShowBloodMoon = ParseLegacyBool(doc, "BloodMoon", true);
+        config.ShowKills = ParseLegacyBool(doc, "Kills", true);
+        config.ShowNearestEnemy = ParseLegacyBool(doc, "NearestEnemy", true);
+    }
+
+    private static bool ParseLegacyBool(XmlDocument doc, string name, bool defaultValue)
     {
         var node = doc.SelectSingleNode($"//Display/{name}");
         if (node?.Attributes?["enabled"] == null) return defaultValue;
@@ -233,7 +303,63 @@ public class DisplayConfig
         return node.Attributes["enabled"].Value.ToLower() == "true";
     }
 
+    /// <summary>
+    /// Save display configuration. Updates both ModSettings.xml (if Gears present) and legacy config.
+    /// </summary>
     public void Save(string path)
+    {
+        // Always save to legacy config for backwards compatibility
+        SaveToLegacyConfig(path);
+
+        // Also update ModSettings.xml if Gears is present
+        if (HemSoftQoL.GearsPresent && _modPath != null)
+        {
+            var modSettingsPath = Path.Combine(_modPath, "ModSettings.xml");
+            SaveToModSettings(modSettingsPath);
+        }
+    }
+
+    private void SaveToModSettings(string path)
+    {
+        try
+        {
+            if (!File.Exists(path)) return;
+
+            var doc = new XmlDocument();
+            doc.Load(path);
+
+            // Find the PanelElements category
+            var category = doc.SelectSingleNode("//Tab[@name='InfoPanel']//Category[@name='PanelElements']");
+            if (category == null) return;
+
+            // Update each switch value
+            UpdateGearsSwitch(category, "ShowLevel", ShowLevel);
+            UpdateGearsSwitch(category, "ShowGamestage", ShowGamestage);
+            UpdateGearsSwitch(category, "ShowLootstage", ShowLootstage);
+            UpdateGearsSwitch(category, "ShowDay", ShowDay);
+            UpdateGearsSwitch(category, "ShowBloodMoon", ShowBloodMoon);
+            UpdateGearsSwitch(category, "ShowKills", ShowKills);
+            UpdateGearsSwitch(category, "ShowNearestEnemy", ShowNearestEnemy);
+
+            doc.Save(path);
+            HemSoftQoL.Log($"Display config saved to ModSettings.xml (Gears)");
+        }
+        catch (Exception ex)
+        {
+            HemSoftQoL.LogError($"Failed to save to ModSettings.xml: {ex.Message}");
+        }
+    }
+
+    private static void UpdateGearsSwitch(XmlNode category, string name, bool value)
+    {
+        var switchNode = category.SelectSingleNode($"Switch[@name='{name}']");
+        if (switchNode?.Attributes?["value"] != null)
+        {
+            switchNode.Attributes["value"].Value = value.ToString().ToLower();
+        }
+    }
+
+    private void SaveToLegacyConfig(string path)
     {
         try
         {
@@ -246,6 +372,8 @@ public class DisplayConfig
   
   Set enabled=""true"" to show, enabled=""false"" to hide each element.
   Use console command 'hs' to toggle these settings in-game.
+  
+  Note: If using Gears mod, settings are also saved to ModSettings.xml.
 ");
             doc.AppendChild(comment);
 

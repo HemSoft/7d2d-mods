@@ -2,6 +2,25 @@
 
 All notable changes to HemSoft QoL will be documented in this file.
 
+## [1.4.0] - 2026-01-08
+
+### Added
+- **Gears Integration** - In-game settings UI when Gears mod is installed
+  - Configure all hotkeys (enable/disable, modifier keys, key bindings)
+  - Toggle info panel elements on/off
+  - Access via Main Menu → Mod Settings → HemSoft QoL
+- Localization support for settings UI
+- Automatic config source detection (Gears ModSettings.xml or legacy XML files)
+
+### Changed
+- Config loading now prioritizes ModSettings.xml when Gears is installed
+- Console `hs` command shows Gears detection status
+- Display settings sync to both ModSettings.xml and legacy config files
+
+### Note
+- Gears mod is optional but recommended: https://github.com/s7092910/Gears
+- Without Gears, edit Config/HemSoftQoL.xml and Config/InfoPanelConfig.xml manually
+
 ## [1.3.0] - 2026-01-08
 
 ### Changed

@@ -16,6 +16,7 @@ namespace HemSoft.QoL
         public static HotkeyConfig Config { get; private set; }
         public static DisplayConfig DisplayConfig { get; private set; }
         public static string ModPath { get; private set; }
+        public static bool GearsPresent { get; private set; }
 
         private static readonly string ModTag = "[HemSoft QoL]";
 
@@ -24,11 +25,16 @@ namespace HemSoft.QoL
             Instance = this;
             ModPath = _modInstance.Path;
 
-            Log($"Initializing v1.2.0...");
+            Log($"Initializing v1.4.0...");
 
-            // Load configurations
-            Config = HotkeyConfig.Load(Path.Combine(ModPath, "Config", "HemSoftQoL.xml"));
-            DisplayConfig = DisplayConfig.Load(Path.Combine(ModPath, "Config", "InfoPanelConfig.xml"));
+            // Check if Gears mod settings framework is present (ModSettings.xml with user changes)
+            var modSettingsPath = Path.Combine(ModPath, "ModSettings.xml");
+            GearsPresent = File.Exists(modSettingsPath);
+            Log(GearsPresent ? "Gears settings detected - using ModSettings.xml" : "Gears not detected - using legacy config files");
+
+            // Load configurations (Gears ModSettings.xml takes priority over legacy configs)
+            Config = HotkeyConfig.Load(ModPath);
+            DisplayConfig = DisplayConfig.Load(ModPath);
 
             // Apply Harmony patches
             var harmony = new Harmony("com.hemsoft.qol");
@@ -50,47 +56,125 @@ namespace HemSoft.QoL
 
     /// <summary>
     /// Hotkey configuration loaded from XML.
+    /// Supports both Gears ModSettings.xml format and legacy HemSoftQoL.xml format.
     /// </summary>
     public class HotkeyConfig
     {
-        public HotkeyBinding QuickStack { get; set; } = new("LeftAlt", "Q");
+        public HotkeyBinding QuickStack { get; set; } = new("None", "Q");
         public HotkeyBinding StashAll { get; set; } = new("LeftAlt", "X");
         public HotkeyBinding Restock { get; set; } = new("LeftAlt", "R");
-        public HotkeyBinding SortContainer { get; set; } = new("LeftAlt", "C");
-        public HotkeyBinding SortInventory { get; set; } = new("LeftAlt", "");
+        public HotkeyBinding SortContainer { get; set; } = new("None", "S");
+        public HotkeyBinding SortInventory { get; set; } = new("LeftAlt", "", false);
 
-        public static HotkeyConfig Load(string path)
+        /// <summary>
+        /// Load hotkey configuration. Tries Gears ModSettings.xml first, then falls back to legacy config.
+        /// </summary>
+        public static HotkeyConfig Load(string modPath)
         {
             var config = new HotkeyConfig();
+            var modSettingsPath = Path.Combine(modPath, "ModSettings.xml");
+            var legacyPath = Path.Combine(modPath, "Config", "HemSoftQoL.xml");
 
             try
             {
-                if (!File.Exists(path))
+                // Try Gears ModSettings.xml first
+                if (File.Exists(modSettingsPath))
                 {
-                    HemSoftQoL.Log($"Config not found at {path}, using defaults.");
-                    return config;
+                    if (TryLoadFromModSettings(modSettingsPath, config))
+                    {
+                        HemSoftQoL.Log($"Hotkey configuration loaded from ModSettings.xml (Gears)");
+                        return config;
+                    }
                 }
 
-                var doc = new XmlDocument();
-                doc.Load(path);
-
-                config.QuickStack = ParseHotkey(doc, "QuickStack", config.QuickStack);
-                config.StashAll = ParseHotkey(doc, "StashAll", config.StashAll);
-                config.Restock = ParseHotkey(doc, "Restock", config.Restock);
-                config.SortContainer = ParseHotkey(doc, "SortContainer", config.SortContainer);
-                config.SortInventory = ParseHotkey(doc, "SortInventory", config.SortInventory);
-
-                HemSoftQoL.Log($"Configuration loaded from {path}");
+                // Fallback to legacy config
+                if (File.Exists(legacyPath))
+                {
+                    LoadFromLegacyConfig(legacyPath, config);
+                    HemSoftQoL.Log($"Hotkey configuration loaded from HemSoftQoL.xml (legacy)");
+                }
+                else
+                {
+                    HemSoftQoL.Log($"No config found, using defaults.");
+                }
             }
             catch (Exception ex)
             {
-                HemSoftQoL.LogError($"Failed to load config: {ex.Message}");
+                HemSoftQoL.LogError($"Failed to load hotkey config: {ex.Message}");
             }
 
             return config;
         }
 
-        private static HotkeyBinding ParseHotkey(XmlDocument doc, string name, HotkeyBinding defaultValue)
+        /// <summary>
+        /// Load from Gears ModSettings.xml format.
+        /// </summary>
+        private static bool TryLoadFromModSettings(string path, HotkeyConfig config)
+        {
+            try
+            {
+                var doc = new XmlDocument();
+                doc.Load(path);
+
+                // Parse each hotkey from Gears format
+                config.QuickStack = ParseGearsHotkey(doc, "QuickStack", config.QuickStack);
+                config.StashAll = ParseGearsHotkey(doc, "StashAll", config.StashAll);
+                config.Restock = ParseGearsHotkey(doc, "Restock", config.Restock);
+                config.SortContainer = ParseGearsHotkey(doc, "SortContainer", config.SortContainer);
+                config.SortInventory = ParseGearsHotkey(doc, "SortInventory", config.SortInventory);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Parse a hotkey from Gears ModSettings.xml format.
+        /// Gears uses separate Switch and Selector elements with value="..." attributes.
+        /// </summary>
+        private static HotkeyBinding ParseGearsHotkey(XmlDocument doc, string name, HotkeyBinding defaultValue)
+        {
+            // Find the category for this hotkey
+            var category = doc.SelectSingleNode($"//Category[@name='{name}']");
+            if (category == null) return defaultValue;
+
+            // Get enabled switch (e.g., QuickStackEnabled)
+            var enabledNode = category.SelectSingleNode($"Switch[@name='{name}Enabled']");
+            var enabled = enabledNode?.Attributes?["value"]?.Value?.ToLower() == "true";
+
+            // Get modifier selector (e.g., QuickStackModifier)
+            var modifierNode = category.SelectSingleNode($"Selector[@name='{name}Modifier']");
+            var modifier = modifierNode?.Attributes?["value"]?.Value ?? defaultValue.ModifierName;
+
+            // Get key selector (e.g., QuickStackKey)
+            var keyNode = category.SelectSingleNode($"Selector[@name='{name}Key']");
+            var key = keyNode?.Attributes?["value"]?.Value ?? defaultValue.KeyName;
+
+            return new HotkeyBinding(modifier, key, enabled);
+        }
+
+        /// <summary>
+        /// Load from legacy HemSoftQoL.xml format.
+        /// </summary>
+        private static void LoadFromLegacyConfig(string path, HotkeyConfig config)
+        {
+            var doc = new XmlDocument();
+            doc.Load(path);
+
+            config.QuickStack = ParseLegacyHotkey(doc, "QuickStack", config.QuickStack);
+            config.StashAll = ParseLegacyHotkey(doc, "StashAll", config.StashAll);
+            config.Restock = ParseLegacyHotkey(doc, "Restock", config.Restock);
+            config.SortContainer = ParseLegacyHotkey(doc, "SortContainer", config.SortContainer);
+            config.SortInventory = ParseLegacyHotkey(doc, "SortInventory", config.SortInventory);
+        }
+
+        /// <summary>
+        /// Parse a hotkey from legacy HemSoftQoL.xml format.
+        /// </summary>
+        private static HotkeyBinding ParseLegacyHotkey(XmlDocument doc, string name, HotkeyBinding defaultValue)
         {
             var node = doc.SelectSingleNode($"//Hotkeys/{name}");
             if (node?.Attributes == null) return defaultValue;

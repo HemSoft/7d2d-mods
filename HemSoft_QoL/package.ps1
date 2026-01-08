@@ -4,7 +4,7 @@
 $ErrorActionPreference = "Stop"
 $AssemblyName = "HemSoft_QoL"  # DLL name
 $ModName = "S_HemSoft_QoL"       # Deployed folder name
-$Version = "1.3.0"
+$Version = "1.4.0"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
 
@@ -41,11 +41,22 @@ Copy-Item "$ScriptDir\ModInfo.xml" $PackageDir
 $ConfigDir = Join-Path $PackageDir "Config"
 New-Item -ItemType Directory -Path $ConfigDir | Out-Null
 Copy-Item "$ScriptDir\Config\HemSoftQoL.xml" $ConfigDir
+Copy-Item "$ScriptDir\Config\Localization.txt" $ConfigDir
 
 # XUi folder
 $XuiDir = Join-Path $ConfigDir "XUi"
 New-Item -ItemType Directory -Path $XuiDir | Out-Null
 Copy-Item "$ScriptDir\Config\XUi\windows.xml" $XuiDir
+
+# ModSettings.xml (Gears integration)
+Copy-Item "$ScriptDir\ModSettings.xml" $PackageDir
+
+# Gears folder (icon)
+$GearsDir = Join-Path $PackageDir "Gears"
+if (Test-Path "$ScriptDir\Gears") {
+    New-Item -ItemType Directory -Path $GearsDir | Out-Null
+    Copy-Item "$ScriptDir\Gears\*" $GearsDir -ErrorAction SilentlyContinue
+}
 
 # README
 Copy-Item "$ScriptDir\README.md" $PackageDir
