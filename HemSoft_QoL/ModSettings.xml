@@ -10,12 +10,12 @@
 <ModSettings>
   <Global>
     <!-- Inventory Hotkeys Tab -->
-    <Tab name="Hotkeys" displayKey="hemsoftqol_tab_hotkeys">
+    <Tab name="Hotkeys">
       
       <!-- Quick Stack Settings -->
       <Category name="QuickStack" displayKey="hemsoftqol_cat_quickstack" tooltipKey="hemsoftqol_cat_quickstack_tt">
         <Switch name="QuickStackEnabled" displayKey="hemsoftqol_enabled" tooltipKey="hemsoftqol_enabled_tt"
-                value="true" defaultValue="true" leftValue="Off" rightValue="On" />
+                value="On" defaultValue="On" leftValue="Off" rightValue="On" />
         <Selector name="QuickStackModifier" displayKey="hemsoftqol_modifier" tooltipKey="hemsoftqol_modifier_tt"
                   value="None" defaultValue="None" wrap="true">
           <Property type="arrayValues" allowedValues="None,LeftAlt,RightAlt,LeftControl,RightControl,LeftShift,RightShift" />
@@ -29,7 +29,7 @@
       <!-- Stash All Settings -->
       <Category name="StashAll" displayKey="hemsoftqol_cat_stashall" tooltipKey="hemsoftqol_cat_stashall_tt">
         <Switch name="StashAllEnabled" displayKey="hemsoftqol_enabled" tooltipKey="hemsoftqol_enabled_tt"
-                value="true" defaultValue="true" leftValue="Off" rightValue="On" />
+                value="On" defaultValue="On" leftValue="Off" rightValue="On" />
         <Selector name="StashAllModifier" displayKey="hemsoftqol_modifier" tooltipKey="hemsoftqol_modifier_tt"
                   value="LeftAlt" defaultValue="LeftAlt" wrap="true">
           <Property type="arrayValues" allowedValues="None,LeftAlt,RightAlt,LeftControl,RightControl,LeftShift,RightShift" />
@@ -43,7 +43,7 @@
       <!-- Restock Settings -->
       <Category name="Restock" displayKey="hemsoftqol_cat_restock" tooltipKey="hemsoftqol_cat_restock_tt">
         <Switch name="RestockEnabled" displayKey="hemsoftqol_enabled" tooltipKey="hemsoftqol_enabled_tt"
-                value="true" defaultValue="true" leftValue="Off" rightValue="On" />
+                value="On" defaultValue="On" leftValue="Off" rightValue="On" />
         <Selector name="RestockModifier" displayKey="hemsoftqol_modifier" tooltipKey="hemsoftqol_modifier_tt"
                   value="LeftAlt" defaultValue="LeftAlt" wrap="true">
           <Property type="arrayValues" allowedValues="None,LeftAlt,RightAlt,LeftControl,RightControl,LeftShift,RightShift" />
@@ -57,7 +57,7 @@
       <!-- Sort Container Settings -->
       <Category name="SortContainer" displayKey="hemsoftqol_cat_sortcontainer" tooltipKey="hemsoftqol_cat_sortcontainer_tt">
         <Switch name="SortContainerEnabled" displayKey="hemsoftqol_enabled" tooltipKey="hemsoftqol_enabled_tt"
-                value="true" defaultValue="true" leftValue="Off" rightValue="On" />
+                value="On" defaultValue="On" leftValue="Off" rightValue="On" />
         <Selector name="SortContainerModifier" displayKey="hemsoftqol_modifier" tooltipKey="hemsoftqol_modifier_tt"
                   value="None" defaultValue="None" wrap="true">
           <Property type="arrayValues" allowedValues="None,LeftAlt,RightAlt,LeftControl,RightControl,LeftShift,RightShift" />
@@ -71,7 +71,7 @@
       <!-- Sort Inventory Settings -->
       <Category name="SortInventory" displayKey="hemsoftqol_cat_sortinventory" tooltipKey="hemsoftqol_cat_sortinventory_tt">
         <Switch name="SortInventoryEnabled" displayKey="hemsoftqol_enabled" tooltipKey="hemsoftqol_enabled_tt"
-                value="false" defaultValue="false" leftValue="Off" rightValue="On" />
+                value="Off" defaultValue="Off" leftValue="Off" rightValue="On" />
         <Selector name="SortInventoryModifier" displayKey="hemsoftqol_modifier" tooltipKey="hemsoftqol_modifier_tt"
                   value="LeftAlt" defaultValue="LeftAlt" wrap="true">
           <Property type="arrayValues" allowedValues="None,LeftAlt,RightAlt,LeftControl,RightControl,LeftShift,RightShift" />
@@ -85,23 +85,23 @@
     </Tab>
     
     <!-- Info Panel Tab -->
-    <Tab name="InfoPanel" displayKey="hemsoftqol_tab_infopanel">
+    <Tab name="Info Panel">
       
       <Category name="PanelElements" displayKey="hemsoftqol_cat_elements" tooltipKey="hemsoftqol_cat_elements_tt">
         <Switch name="ShowLevel" displayKey="hemsoftqol_show_level" tooltipKey="hemsoftqol_show_level_tt"
-                value="true" defaultValue="true" leftValue="Hide" rightValue="Show" />
+                value="Show" defaultValue="Show" leftValue="Hide" rightValue="Show" />
         <Switch name="ShowGamestage" displayKey="hemsoftqol_show_gamestage" tooltipKey="hemsoftqol_show_gamestage_tt"
-                value="true" defaultValue="true" leftValue="Hide" rightValue="Show" />
+                value="Show" defaultValue="Show" leftValue="Hide" rightValue="Show" />
         <Switch name="ShowLootstage" displayKey="hemsoftqol_show_lootstage" tooltipKey="hemsoftqol_show_lootstage_tt"
-                value="true" defaultValue="true" leftValue="Hide" rightValue="Show" />
+                value="Show" defaultValue="Show" leftValue="Hide" rightValue="Show" />
         <Switch name="ShowDay" displayKey="hemsoftqol_show_day" tooltipKey="hemsoftqol_show_day_tt"
-                value="true" defaultValue="true" leftValue="Hide" rightValue="Show" />
+                value="Show" defaultValue="Show" leftValue="Hide" rightValue="Show" />
         <Switch name="ShowBloodMoon" displayKey="hemsoftqol_show_bloodmoon" tooltipKey="hemsoftqol_show_bloodmoon_tt"
-                value="true" defaultValue="true" leftValue="Hide" rightValue="Show" />
+                value="Show" defaultValue="Show" leftValue="Hide" rightValue="Show" />
         <Switch name="ShowKills" displayKey="hemsoftqol_show_kills" tooltipKey="hemsoftqol_show_kills_tt"
-                value="true" defaultValue="true" leftValue="Hide" rightValue="Show" />
+                value="Show" defaultValue="Show" leftValue="Hide" rightValue="Show" />
         <Switch name="ShowNearestEnemy" displayKey="hemsoftqol_show_enemy" tooltipKey="hemsoftqol_show_enemy_tt"
-                value="true" defaultValue="true" leftValue="Hide" rightValue="Show" />
+                value="Show" defaultValue="Show" leftValue="Hide" rightValue="Show" />
       </Category>
       
     </Tab>

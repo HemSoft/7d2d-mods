@@ -134,6 +134,7 @@ namespace HemSoft.QoL
         /// <summary>
         /// Parse a hotkey from Gears ModSettings.xml format.
         /// Gears uses separate Switch and Selector elements with value="..." attributes.
+        /// Switch values use rightValue text (e.g., "On"/"Off") not booleans.
         /// </summary>
         private static HotkeyBinding ParseGearsHotkey(XmlDocument doc, string name, HotkeyBinding defaultValue)
         {
@@ -141,9 +142,11 @@ namespace HemSoft.QoL
             var category = doc.SelectSingleNode($"//Category[@name='{name}']");
             if (category == null) return defaultValue;
 
-            // Get enabled switch (e.g., QuickStackEnabled)
+            // Get enabled switch (e.g., QuickStackEnabled) - value matches rightValue when enabled
             var enabledNode = category.SelectSingleNode($"Switch[@name='{name}Enabled']");
-            var enabled = enabledNode?.Attributes?["value"]?.Value?.ToLower() == "true";
+            var rightValue = enabledNode?.Attributes?["rightValue"]?.Value ?? "On";
+            var currentValue = enabledNode?.Attributes?["value"]?.Value ?? rightValue;
+            var enabled = currentValue.Equals(rightValue, StringComparison.OrdinalIgnoreCase);
 
             // Get modifier selector (e.g., QuickStackModifier)
             var modifierNode = category.SelectSingleNode($"Selector[@name='{name}Modifier']");

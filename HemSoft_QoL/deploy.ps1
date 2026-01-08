@@ -45,6 +45,7 @@ if (-not (Test-Path $DestPath)) {
 Write-Host "Deploying to $DestPath..." -ForegroundColor Yellow
 
 Copy-Item "$ScriptDir\ModInfo.xml" $DestPath -Force
+Copy-Item "$ScriptDir\ModSettings.xml" $DestPath -Force
 Copy-Item "$ScriptDir\bin\$AssemblyName.dll" $DestPath -Force
 Copy-Item "$ScriptDir\Config" $DestPath -Recurse -Force
 

@@ -247,8 +247,8 @@ public class DisplayConfig
             var doc = new XmlDocument();
             doc.Load(path);
 
-            // Find the PanelElements category in the InfoPanel tab
-            var category = doc.SelectSingleNode("//Tab[@name='InfoPanel']//Category[@name='PanelElements']");
+            // Find the PanelElements category in the Info Panel tab
+            var category = doc.SelectSingleNode("//Tab[@name='Info Panel']//Category[@name='PanelElements']");
             if (category == null) return false;
 
             config.ShowLevel = ParseGearsSwitch(category, "ShowLevel", true);
@@ -269,13 +269,16 @@ public class DisplayConfig
 
     /// <summary>
     /// Parse a Switch element from Gears ModSettings.xml format.
+    /// Switch values use rightValue text (e.g., "Show"/"Hide") not booleans.
     /// </summary>
     private static bool ParseGearsSwitch(XmlNode category, string name, bool defaultValue)
     {
         var switchNode = category.SelectSingleNode($"Switch[@name='{name}']");
         if (switchNode?.Attributes?["value"] == null) return defaultValue;
 
-        return switchNode.Attributes["value"].Value.ToLower() == "true";
+        var rightValue = switchNode.Attributes["rightValue"]?.Value ?? "Show";
+        var currentValue = switchNode.Attributes["value"].Value;
+        return currentValue.Equals(rightValue, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -329,10 +332,10 @@ public class DisplayConfig
             doc.Load(path);
 
             // Find the PanelElements category
-            var category = doc.SelectSingleNode("//Tab[@name='InfoPanel']//Category[@name='PanelElements']");
+            var category = doc.SelectSingleNode("//Tab[@name='Info Panel']//Category[@name='PanelElements']");
             if (category == null) return;
 
-            // Update each switch value
+            // Update each switch value using the rightValue/leftValue text
             UpdateGearsSwitch(category, "ShowLevel", ShowLevel);
             UpdateGearsSwitch(category, "ShowGamestage", ShowGamestage);
             UpdateGearsSwitch(category, "ShowLootstage", ShowLootstage);
@@ -355,7 +358,10 @@ public class DisplayConfig
         var switchNode = category.SelectSingleNode($"Switch[@name='{name}']");
         if (switchNode?.Attributes?["value"] != null)
         {
-            switchNode.Attributes["value"].Value = value.ToString().ToLower();
+            // Use rightValue when true, leftValue when false
+            var rightValue = switchNode.Attributes["rightValue"]?.Value ?? "Show";
+            var leftValue = switchNode.Attributes["leftValue"]?.Value ?? "Hide";
+            switchNode.Attributes["value"].Value = value ? rightValue : leftValue;
         }
     }
 
