@@ -2,7 +2,8 @@
 # Creates a clean ZIP file for Nexus Mods distribution
 
 $ErrorActionPreference = "Stop"
-$ModName = "HemSoft_QoL"
+$AssemblyName = "HemSoft_QoL"  # DLL name
+$ModName = "S_HemSoft_QoL"       # Deployed folder name
 $Version = "1.2.0"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
@@ -31,7 +32,7 @@ New-Item -ItemType Directory -Path $PackageDir | Out-Null
 Write-Host "Copying files..." -ForegroundColor Yellow
 
 # DLL
-Copy-Item "$ScriptDir\bin\$ModName.dll" $PackageDir
+Copy-Item "$ScriptDir\bin\$AssemblyName.dll" $PackageDir
 
 # ModInfo.xml
 Copy-Item "$ScriptDir\ModInfo.xml" $PackageDir

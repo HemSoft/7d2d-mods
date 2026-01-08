@@ -9,7 +9,8 @@ param(
 $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ModName = "HemSoft_QoL"
+$AssemblyName = "HemSoft_QoL"  # DLL name (matches .csproj)
+$ModName = "S_HemSoft_QoL"       # Deployed folder name
 $GamePath = "C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die"
 $ModsPath = "$GamePath\Mods"
 $DestPath = "$ModsPath\$ModName"
@@ -44,7 +45,7 @@ if (-not (Test-Path $DestPath)) {
 Write-Host "Deploying to $DestPath..." -ForegroundColor Yellow
 
 Copy-Item "$ScriptDir\ModInfo.xml" $DestPath -Force
-Copy-Item "$ScriptDir\bin\$ModName.dll" $DestPath -Force
+Copy-Item "$ScriptDir\bin\$AssemblyName.dll" $DestPath -Force
 Copy-Item "$ScriptDir\Config" $DestPath -Recurse -Force
 
 Write-Host ""

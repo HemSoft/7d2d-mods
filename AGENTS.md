@@ -24,6 +24,8 @@ Quality of Life mod with inventory hotkeys, HUD info panel, and enemy tracking.
 
 **Nexus Mods**: https://www.nexusmods.com/7daystodie/mods/9332
 
+> **Naming**: Source folder is `HemSoft_QoL/` but deploys as `S_HemSoft_QoL/` to avoid conflicts with another mod. The `S_` prefix also affects load order.
+
 **Inventory Hotkeys** (when container is open):
 - **Q**: Quick Stack - deposits items matching existing container stacks
 - **Alt+X**: Stash All - deposits all backpack items to container
