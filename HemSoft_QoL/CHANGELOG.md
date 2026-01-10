@@ -2,7 +2,7 @@
 
 All notable changes to HemSoft QoL will be documented in this file.
 
-## [1.4.0] - 2026-01-08
+## [1.3.0] - 2026-01-08
 
 ### Added
 - **Gears Integration** - In-game settings UI when Gears mod is installed

@@ -16,6 +16,8 @@ namespace HemSoft.QoL
         public static HotkeyConfig Config { get; private set; }
         public static DisplayConfig DisplayConfig { get; private set; }
         public static string ModPath { get; private set; }
+        public static string ModName { get; private set; }
+        public static string GearsSettingsPath { get; private set; }
         public static bool GearsPresent { get; private set; }
 
         private static readonly string ModTag = "[HemSoft QoL]";
@@ -24,13 +26,19 @@ namespace HemSoft.QoL
         {
             Instance = this;
             ModPath = _modInstance.Path;
+            ModName = Path.GetFileName(ModPath); // e.g., "S_HemSoft_QoL"
 
-            Log($"Initializing v1.4.0...");
+            Log($"Initializing v1.3.0...");
 
-            // Check if Gears mod settings framework is present (ModSettings.xml with user changes)
-            var modSettingsPath = Path.Combine(ModPath, "ModSettings.xml");
-            GearsPresent = File.Exists(modSettingsPath);
-            Log(GearsPresent ? "Gears settings detected - using ModSettings.xml" : "Gears not detected - using legacy config files");
+            // Check if Gears mod settings framework is present
+            // Gears stores user settings in %APPDATA%/7DaysToDie/Gears/ModSettings.xml
+            GearsSettingsPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "7DaysToDie", "Gears", "ModSettings.xml");
+            GearsPresent = File.Exists(GearsSettingsPath);
+            Log(GearsPresent 
+                ? $"Gears settings detected at: {GearsSettingsPath}" 
+                : "Gears not detected - using legacy config files");
 
             // Load configurations (Gears ModSettings.xml takes priority over legacy configs)
             Config = HotkeyConfig.Load(ModPath);
@@ -41,6 +49,22 @@ namespace HemSoft.QoL
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
             Log($"Loaded successfully! Hotkeys active when container is open. Type 'hemsoft' in console for settings.");
+        }
+
+        /// <summary>
+        /// Reload display configuration from ModSettings.xml (called when Gears settings change).
+        /// </summary>
+        public static void ReloadDisplayConfig()
+        {
+            DisplayConfig = DisplayConfig.Load(ModPath);
+        }
+
+        /// <summary>
+        /// Reload hotkey configuration from ModSettings.xml (called when Gears settings change).
+        /// </summary>
+        public static void ReloadHotkeyConfig()
+        {
+            Config = HotkeyConfig.Load(ModPath);
         }
 
         public static void Log(string message)
@@ -67,22 +91,21 @@ namespace HemSoft.QoL
         public HotkeyBinding SortInventory { get; set; } = new("LeftAlt", "", false);
 
         /// <summary>
-        /// Load hotkey configuration. Tries Gears ModSettings.xml first, then falls back to legacy config.
+        /// Load hotkey configuration. Tries Gears global settings first, then falls back to legacy config.
         /// </summary>
         public static HotkeyConfig Load(string modPath)
         {
             var config = new HotkeyConfig();
-            var modSettingsPath = Path.Combine(modPath, "ModSettings.xml");
             var legacyPath = Path.Combine(modPath, "Config", "HemSoftQoL.xml");
 
             try
             {
-                // Try Gears ModSettings.xml first
-                if (File.Exists(modSettingsPath))
+                // Try Gears global settings first (stored in %APPDATA%/7DaysToDie/Gears/ModSettings.xml)
+                if (HemSoftQoL.GearsPresent)
                 {
-                    if (TryLoadFromModSettings(modSettingsPath, config))
+                    if (TryLoadFromGearsSettings(config))
                     {
-                        HemSoftQoL.Log($"Hotkey configuration loaded from ModSettings.xml (Gears)");
+                        HemSoftQoL.Log($"Hotkey configuration loaded from Gears settings");
                         return config;
                     }
                 }
@@ -107,53 +130,62 @@ namespace HemSoft.QoL
         }
 
         /// <summary>
-        /// Load from Gears ModSettings.xml format.
+        /// Load from Gears global settings file.
+        /// Path: %APPDATA%/7DaysToDie/Gears/ModSettings.xml
+        /// Structure: <Mod name="S_HemSoft_QoL">/<Tab>/<Category>/<Setting name="..." value="..." />
         /// </summary>
-        private static bool TryLoadFromModSettings(string path, HotkeyConfig config)
+        private static bool TryLoadFromGearsSettings(HotkeyConfig config)
         {
             try
             {
                 var doc = new XmlDocument();
-                doc.Load(path);
+                doc.Load(HemSoftQoL.GearsSettingsPath);
+
+                // Find our mod's settings node
+                var modNode = doc.SelectSingleNode($"//Mod[@name='{HemSoftQoL.ModName}']");
+                if (modNode == null)
+                {
+                    HemSoftQoL.Log($"Mod '{HemSoftQoL.ModName}' not found in Gears settings");
+                    return false;
+                }
 
                 // Parse each hotkey from Gears format
-                config.QuickStack = ParseGearsHotkey(doc, "QuickStack", config.QuickStack);
-                config.StashAll = ParseGearsHotkey(doc, "StashAll", config.StashAll);
-                config.Restock = ParseGearsHotkey(doc, "Restock", config.Restock);
-                config.SortContainer = ParseGearsHotkey(doc, "SortContainer", config.SortContainer);
-                config.SortInventory = ParseGearsHotkey(doc, "SortInventory", config.SortInventory);
+                config.QuickStack = ParseGearsHotkey(modNode, "QuickStack", config.QuickStack);
+                config.StashAll = ParseGearsHotkey(modNode, "StashAll", config.StashAll);
+                config.Restock = ParseGearsHotkey(modNode, "Restock", config.Restock);
+                config.SortContainer = ParseGearsHotkey(modNode, "SortContainer", config.SortContainer);
+                config.SortInventory = ParseGearsHotkey(modNode, "SortInventory", config.SortInventory);
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                HemSoftQoL.LogError($"Failed to load from Gears settings: {ex.Message}");
                 return false;
             }
         }
 
         /// <summary>
-        /// Parse a hotkey from Gears ModSettings.xml format.
-        /// Gears uses separate Switch and Selector elements with value="..." attributes.
-        /// Switch values use rightValue text (e.g., "On"/"Off") not booleans.
+        /// Parse a hotkey from Gears global settings format.
+        /// Structure: <Category name="QuickStack"><Setting name="QuickStackEnabled" value="On" />...
         /// </summary>
-        private static HotkeyBinding ParseGearsHotkey(XmlDocument doc, string name, HotkeyBinding defaultValue)
+        private static HotkeyBinding ParseGearsHotkey(XmlNode modNode, string name, HotkeyBinding defaultValue)
         {
             // Find the category for this hotkey
-            var category = doc.SelectSingleNode($"//Category[@name='{name}']");
+            var category = modNode.SelectSingleNode($".//Category[@name='{name}']");
             if (category == null) return defaultValue;
 
-            // Get enabled switch (e.g., QuickStackEnabled) - value matches rightValue when enabled
-            var enabledNode = category.SelectSingleNode($"Switch[@name='{name}Enabled']");
-            var rightValue = enabledNode?.Attributes?["rightValue"]?.Value ?? "On";
-            var currentValue = enabledNode?.Attributes?["value"]?.Value ?? rightValue;
-            var enabled = currentValue.Equals(rightValue, StringComparison.OrdinalIgnoreCase);
+            // Get enabled setting (e.g., QuickStackEnabled)
+            var enabledNode = category.SelectSingleNode($"Setting[@name='{name}Enabled']");
+            var enabledValue = enabledNode?.Attributes?["value"]?.Value ?? "On";
+            var enabled = enabledValue.Equals("On", StringComparison.OrdinalIgnoreCase);
 
-            // Get modifier selector (e.g., QuickStackModifier)
-            var modifierNode = category.SelectSingleNode($"Selector[@name='{name}Modifier']");
+            // Get modifier setting (e.g., QuickStackModifier)
+            var modifierNode = category.SelectSingleNode($"Setting[@name='{name}Modifier']");
             var modifier = modifierNode?.Attributes?["value"]?.Value ?? defaultValue.ModifierName;
 
-            // Get key selector (e.g., QuickStackKey)
-            var keyNode = category.SelectSingleNode($"Selector[@name='{name}Key']");
+            // Get key setting (e.g., QuickStackKey)
+            var keyNode = category.SelectSingleNode($"Setting[@name='{name}Key']");
             var key = keyNode?.Attributes?["value"]?.Value ?? defaultValue.KeyName;
 
             return new HotkeyBinding(modifier, key, enabled);

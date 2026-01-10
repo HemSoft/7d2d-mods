@@ -4,7 +4,7 @@
 $ErrorActionPreference = "Stop"
 $AssemblyName = "HemSoft_QoL"  # DLL name
 $ModName = "S_HemSoft_QoL"       # Deployed folder name
-$Version = "1.4.0"
+$Version = "1.3.0"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
 
@@ -67,7 +67,7 @@ if (!(Test-Path $OutputDir)) {
     New-Item -ItemType Directory -Path $OutputDir | Out-Null
 }
 
-$ZipName = "${ModName}_v${Version}.zip"
+$ZipName = "${AssemblyName}_v${Version}.zip"
 $ZipPath = Join-Path $OutputDir $ZipName
 
 if (Test-Path $ZipPath) {

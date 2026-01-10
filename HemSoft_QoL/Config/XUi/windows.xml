@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- HemSoft QoL - Custom HUD Info Panel -->
 <!-- Use console commands to configure: hs level, hs gamestage, etc. -->
+<!-- Supports both vanilla and RW_SimpleUI HUDs -->
 <configs>
-    <!-- Append our info panel to the HUDLeftStatBars window -->
-    <append xpath="/windows/window[@name='HUDLeftStatBars']">
+    <!-- Append our info panel to the HUD window (vanilla OR RW_SimpleUI) -->
+    <append xpath="/windows/window[@name='HUDLeftStatBars' or @name='RWSUI_LeftHUD']">
         <!-- Info Panel - positioned to the right of the stat bars -->
         <rect name="hemsoft_info_panel" controller="XUiC_HemSoftInfoPanel, HemSoft_QoL"
               pos="190,170" width="140" height="190">

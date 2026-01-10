@@ -23,9 +23,13 @@ namespace HemSoft.QoL.Patches
             // Only process backpack windows
             if (__instance is not XUiC_BackpackWindow backpackWindow) return;
             
-            // Only process when game is running and a container is open
+            // Only process when game is running
             if (!XUi.IsGameRunning()) return;
-            if (backpackWindow.xui?.lootContainer == null) return;
+            
+            // Get the container - this handles both regular containers AND vehicle storage
+            // The game uses lootContainer for both
+            var container = InventoryActions.GetActiveLootContainer(backpackWindow.xui);
+            if (container == null) return;
 
             var config = HemSoftQoL.Config;
             if (config == null) return;
@@ -33,22 +37,22 @@ namespace HemSoft.QoL.Patches
             // Quick Stack: Deposit items matching existing stacks in container
             if (config.QuickStack.IsPressed())
             {
-                InventoryActions.QuickStack(backpackWindow);
+                InventoryActions.QuickStack(backpackWindow, container);
             }
             // Stash All: Deposit all non-locked items
             else if (config.StashAll.IsPressed())
             {
-                InventoryActions.StashAll(backpackWindow);
+                InventoryActions.StashAll(backpackWindow, container);
             }
             // Restock: Pull items from container to fill inventory stacks
             else if (config.Restock.IsPressed())
             {
-                InventoryActions.Restock(backpackWindow);
+                InventoryActions.Restock(backpackWindow, container);
             }
             // Sort Container: Sort items in the open container
             else if (config.SortContainer.IsPressed())
             {
-                InventoryActions.SortContainer(backpackWindow);
+                InventoryActions.SortContainer(backpackWindow, container);
             }
             // Sort Inventory: Sort items in player backpack
             else if (config.SortInventory.IsPressed())
@@ -60,21 +64,96 @@ namespace HemSoft.QoL.Patches
 
     /// <summary>
     /// Inventory action implementations using 7D2D V2.5 APIs.
+    /// Supports both regular containers (chests) and vehicle storage.
     /// </summary>
     public static class InventoryActions
     {
         /// <summary>
+        /// Gets the active loot container from the XUi.
+        /// Checks both regular containers (xui.lootContainer) and vehicle storage.
+        /// In 7D2D V2.5, both regular containers AND vehicle storage use xui.lootContainer.
+        /// The vehicle storage window is "vehiclestorage" and when open, xui.lootContainer is set.
+        /// </summary>
+        public static ITileEntityLootable GetActiveLootContainer(XUi xui)
+        {
+            if (xui == null) return null;
+            
+            // The lootContainer property is used for BOTH regular containers AND vehicle storage
+            // When either the "looting" or "vehiclestorage" window is open, lootContainer is set
+            if (xui.lootContainer != null) return xui.lootContainer;
+            
+            // If lootContainer is null, try to get it from the vehicle storage window group
+            try
+            {
+                var windowManager = xui.playerUI?.windowManager;
+                if (windowManager != null && windowManager.IsWindowOpen("vehiclestorage"))
+                {
+                    // Try to get the vehicle storage window and access its tile entity
+                    var window = windowManager.GetWindow("vehiclestorage");
+                    if (window is XUiWindowGroup windowGroup)
+                    {
+                        // The XUiC_VehicleStorageWindowGroup should have a reference to the loot container
+                        var controller = windowGroup.Controller;
+                        if (controller != null)
+                        {
+                            // Use reflection to try to get the TileEntity if available
+                            var teField = controller.GetType().GetField("te", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                            if (teField != null)
+                            {
+                                var te = teField.GetValue(controller) as ITileEntityLootable;
+                                if (te != null) return te;
+                            }
+                            
+                            // Try property instead
+                            var teProperty = controller.GetType().GetProperty("te", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                            if (teProperty != null)
+                            {
+                                var te = teProperty.GetValue(controller) as ITileEntityLootable;
+                                if (te != null) return te;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Silently ignore window access errors
+            }
+            
+            // Fallback: try to get from the vehicle entity directly
+            try
+            {
+                var vehicle = xui.vehicle?.GetVehicle();
+                if (vehicle?.entity != null)
+                {
+                    var entityVehicle = vehicle.entity as EntityVehicle;
+                    if (entityVehicle?.lootContainer != null)
+                    {
+                        return entityVehicle.lootContainer;
+                    }
+                }
+            }
+            catch
+            {
+                // Silently ignore vehicle access errors
+            }
+            
+            return null;
+        }
+
+        /// <summary>
         /// Deposits items from player inventory that match existing stacks in the container.
         /// </summary>
-        public static void QuickStack(XUiC_BackpackWindow backpackWindow)
+        public static void QuickStack(XUiC_BackpackWindow backpackWindow, ITileEntityLootable container)
         {
             var xui = backpackWindow.xui;
-            var container = xui.lootContainer;
             var playerInventory = xui.PlayerInventory;
 
             if (container == null || playerInventory == null) return;
 
             var containerItems = container.items;
+            if (containerItems == null) return;
+            
             var transferCount = 0;
 
             // Get backpack slots
@@ -123,10 +202,9 @@ namespace HemSoft.QoL.Patches
         /// <summary>
         /// Deposits all items from player inventory into the container.
         /// </summary>
-        public static void StashAll(XUiC_BackpackWindow backpackWindow)
+        public static void StashAll(XUiC_BackpackWindow backpackWindow, ITileEntityLootable container)
         {
             var xui = backpackWindow.xui;
-            var container = xui.lootContainer;
             var playerInventory = xui.PlayerInventory;
 
             if (container == null || playerInventory == null) return;
@@ -172,15 +250,16 @@ namespace HemSoft.QoL.Patches
         /// <summary>
         /// Pulls items from container to fill existing stacks in player inventory.
         /// </summary>
-        public static void Restock(XUiC_BackpackWindow backpackWindow)
+        public static void Restock(XUiC_BackpackWindow backpackWindow, ITileEntityLootable container)
         {
             var xui = backpackWindow.xui;
-            var container = xui.lootContainer;
             var playerInventory = xui.PlayerInventory;
 
             if (container == null || playerInventory == null) return;
 
             var containerItems = container.items;
+            if (containerItems == null) return;
+            
             var transferCount = 0;
 
             // Check player backpack for partial stacks
@@ -241,14 +320,15 @@ namespace HemSoft.QoL.Patches
         /// <summary>
         /// Sorts items in the container alphabetically by item name.
         /// </summary>
-        public static void SortContainer(XUiC_BackpackWindow backpackWindow)
+        public static void SortContainer(XUiC_BackpackWindow backpackWindow, ITileEntityLootable container)
         {
             var xui = backpackWindow.xui;
-            var container = xui.lootContainer;
 
             if (container == null) return;
 
             var containerItems = container.items;
+            if (containerItems == null) return;
+            
             var itemList = new List<ItemStack>();
 
             // Collect all non-empty items

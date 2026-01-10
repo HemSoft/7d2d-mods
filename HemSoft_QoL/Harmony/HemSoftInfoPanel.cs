@@ -29,6 +29,12 @@ public class XUiC_HemSoftInfoPanel : XUiController
     private float _updateTimer;
     private const float UpdateInterval = 0.25f;
     
+    // Config hot-reload
+    private float _configCheckTimer;
+    private const float ConfigCheckInterval = 2.0f; // Check every 2 seconds
+    private static System.DateTime _lastConfigModified = System.DateTime.MinValue;
+    private static bool _configInitialized;
+    
     // Reusable list to avoid GC allocations
     private readonly List<Entity> _nearbyEntities = new List<Entity>(64);
 
@@ -38,11 +44,21 @@ public class XUiC_HemSoftInfoPanel : XUiController
     private static bool _positionLoaded;
     private const int MoveStep = 5;
     private const int MoveStepFast = 20;
+    
+    // Layout constants
+    private const int TitleHeight = 28;
+    private const int RowHeight = 20;
+    private const int PanelPadding = 6;
+    private const int PanelWidth = 140;
+    
+    // Track if layout needs update
+    private bool _layoutDirty = true;
 
     public override void Init()
     {
         base.Init();
         _isDirty = true;
+        _layoutDirty = true;
 
         if (!_positionLoaded)
         {
@@ -59,6 +75,14 @@ public class XUiC_HemSoftInfoPanel : XUiController
         base.Update(_dt);
 
         if (!XUi.IsGameRunning()) return;
+
+        // Check for config changes (hot-reload from Gears settings)
+        _configCheckTimer += _dt;
+        if (_configCheckTimer >= ConfigCheckInterval)
+        {
+            _configCheckTimer = 0f;
+            CheckConfigReload();
+        }
 
         // Handle position mode toggle (Alt+P)
         if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(KeyCode.P))
@@ -147,6 +171,126 @@ public class XUiC_HemSoftInfoPanel : XUiController
             RefreshBindings(false);
             _isDirty = false;
         }
+        
+        // Update layout if config changed (repositions visible rows, resizes panel)
+        if (_layoutDirty)
+        {
+            UpdateLayout();
+        }
+    }
+
+    private void CheckConfigReload()
+    {
+        try
+        {
+            // Watch the Gears global settings file if present
+            var gearsPath = HemSoftQoL.GearsSettingsPath;
+            if (!File.Exists(gearsPath))
+            {
+                // If Gears not present, no hot-reload needed
+                if (!_configInitialized)
+                {
+                    _configInitialized = true;
+                    HemSoftQoL.Log("Config hot-reload disabled (Gears settings not found)");
+                }
+                return;
+            }
+
+            var lastWrite = File.GetLastWriteTime(gearsPath);
+            
+            // On first check, just record the current time without reloading
+            // (config was already loaded at mod init)
+            if (!_configInitialized)
+            {
+                _lastConfigModified = lastWrite;
+                _configInitialized = true;
+                HemSoftQoL.Log($"Config hot-reload initialized. Watching: {gearsPath}");
+                return;
+            }
+            
+            // Check if file was modified since last check
+            if (lastWrite > _lastConfigModified)
+            {
+                HemSoftQoL.Log($"Gears settings changed: {_lastConfigModified} -> {lastWrite}");
+                _lastConfigModified = lastWrite;
+                
+                // Reload display config from Gears global settings
+                HemSoftQoL.ReloadDisplayConfig();
+                _isDirty = true;
+                _layoutDirty = true;
+                
+                HemSoftQoL.Log("Display config reloaded from Gears settings");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            HemSoftQoL.LogError($"Config reload check failed: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// Dynamically reposition visible rows and resize panel based on config.
+    /// This eliminates gaps from hidden rows.
+    /// </summary>
+    private void UpdateLayout()
+    {
+        if (!_layoutDirty || ViewComponent == null) return;
+        _layoutDirty = false;
+        
+        var config = HemSoftQoL.DisplayConfig;
+        if (config == null) return;
+        
+        // Row names in order (must match XUi XML)
+        var rows = new[] {
+            ("levelRow", config.ShowLevel),
+            ("gamestageRow", config.ShowGamestage),
+            ("lootstageRow", config.ShowLootstage),
+            ("dayRow", config.ShowDay),
+            ("bloodmoonRow", config.ShowBloodMoon),
+            ("killsRow", config.ShowKills),
+            ("enemyRow", config.ShowNearestEnemy),
+            ("enemyCountRow", config.ShowNearestEnemy) // Same visibility as enemy
+        };
+        
+        int visibleCount = 0;
+        int yPos = -TitleHeight; // Start below title bar
+        
+        foreach (var (rowName, isVisible) in rows)
+        {
+            var row = GetChildById(rowName);
+            if (row?.ViewComponent == null) continue;
+            
+            if (isVisible)
+            {
+                // Position visible rows consecutively
+                row.ViewComponent.Position = new Vector2i(0, yPos);
+                row.ViewComponent.UiTransform.localPosition = new Vector3(0, yPos, 0);
+                yPos -= RowHeight;
+                visibleCount++;
+            }
+        }
+        
+        // Calculate panel height: title + visible rows + padding
+        int panelHeight = TitleHeight + (visibleCount * RowHeight) + PanelPadding;
+        
+        // Resize main panel and background sprites
+        ViewComponent.Size = new Vector2i(PanelWidth, panelHeight);
+        
+        // Update background sprite
+        var background = GetChildById("background");
+        if (background?.ViewComponent != null)
+        {
+            background.ViewComponent.Size = new Vector2i(PanelWidth, panelHeight);
+        }
+        
+        // Update border sprite
+        var border = GetChildById("border");
+        if (border?.ViewComponent != null)
+        {
+            border.ViewComponent.Size = new Vector2i(PanelWidth, panelHeight);
+        }
+        
+        HemSoftQoL.Log($"Panel layout updated: {visibleCount} rows, height={panelHeight}");
     }
 
     private void ApplyPosition()

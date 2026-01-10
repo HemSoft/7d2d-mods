@@ -183,7 +183,7 @@ Current Hotkeys (when container is open):
 
 /// <summary>
 /// Configuration for info panel display elements.
-/// Supports both Gears ModSettings.xml format and legacy InfoPanelConfig.xml format.
+/// Supports both Gears global settings and legacy InfoPanelConfig.xml format.
 /// </summary>
 public class DisplayConfig
 {
@@ -198,22 +198,21 @@ public class DisplayConfig
     private string _modPath;
 
     /// <summary>
-    /// Load display configuration. Tries Gears ModSettings.xml first, then falls back to legacy config.
+    /// Load display configuration. Tries Gears global settings first, then falls back to legacy config.
     /// </summary>
     public static DisplayConfig Load(string modPath)
     {
         var config = new DisplayConfig { _modPath = modPath };
-        var modSettingsPath = Path.Combine(modPath, "ModSettings.xml");
         var legacyPath = Path.Combine(modPath, "Config", "InfoPanelConfig.xml");
 
         try
         {
-            // Try Gears ModSettings.xml first
-            if (File.Exists(modSettingsPath))
+            // Try Gears global settings first (stored in %APPDATA%/7DaysToDie/Gears/ModSettings.xml)
+            if (HemSoftQoL.GearsPresent)
             {
-                if (TryLoadFromModSettings(modSettingsPath, config))
+                if (TryLoadFromGearsSettings(config))
                 {
-                    HemSoftQoL.Log($"Display configuration loaded from ModSettings.xml (Gears)");
+                    HemSoftQoL.Log($"Display configuration loaded from Gears settings");
                     return config;
                 }
             }
@@ -238,47 +237,63 @@ public class DisplayConfig
     }
 
     /// <summary>
-    /// Load from Gears ModSettings.xml format.
+    /// Load from Gears global settings file.
+    /// Path: %APPDATA%/7DaysToDie/Gears/ModSettings.xml
+    /// Structure: <Mod name="S_HemSoft_QoL">/<Tab>/<Category>/<Setting name="..." value="..." />
     /// </summary>
-    private static bool TryLoadFromModSettings(string path, DisplayConfig config)
+    private static bool TryLoadFromGearsSettings(DisplayConfig config)
     {
         try
         {
             var doc = new XmlDocument();
-            doc.Load(path);
+            doc.Load(HemSoftQoL.GearsSettingsPath);
+
+            // Find our mod's settings node
+            var modNode = doc.SelectSingleNode($"//Mod[@name='{HemSoftQoL.ModName}']");
+            if (modNode == null)
+            {
+                HemSoftQoL.Log($"Mod '{HemSoftQoL.ModName}' not found in Gears settings");
+                return false;
+            }
 
             // Find the PanelElements category in the Info Panel tab
-            var category = doc.SelectSingleNode("//Tab[@name='Info Panel']//Category[@name='PanelElements']");
-            if (category == null) return false;
+            var category = modNode.SelectSingleNode(".//Tab[@name='Info Panel']//Category[@name='PanelElements']");
+            if (category == null)
+            {
+                HemSoftQoL.Log("PanelElements category not found in Gears settings");
+                return false;
+            }
 
-            config.ShowLevel = ParseGearsSwitch(category, "ShowLevel", true);
-            config.ShowGamestage = ParseGearsSwitch(category, "ShowGamestage", true);
-            config.ShowLootstage = ParseGearsSwitch(category, "ShowLootstage", true);
-            config.ShowDay = ParseGearsSwitch(category, "ShowDay", true);
-            config.ShowBloodMoon = ParseGearsSwitch(category, "ShowBloodMoon", true);
-            config.ShowKills = ParseGearsSwitch(category, "ShowKills", true);
-            config.ShowNearestEnemy = ParseGearsSwitch(category, "ShowNearestEnemy", true);
+            config.ShowLevel = ParseGearsSetting(category, "ShowLevel", true);
+            config.ShowGamestage = ParseGearsSetting(category, "ShowGamestage", true);
+            config.ShowLootstage = ParseGearsSetting(category, "ShowLootstage", true);
+            config.ShowDay = ParseGearsSetting(category, "ShowDay", true);
+            config.ShowBloodMoon = ParseGearsSetting(category, "ShowBloodMoon", true);
+            config.ShowKills = ParseGearsSetting(category, "ShowKills", true);
+            config.ShowNearestEnemy = ParseGearsSetting(category, "ShowNearestEnemy", true);
+
+            HemSoftQoL.Log($"Loaded display settings: Level={config.ShowLevel}, GS={config.ShowGamestage}, LS={config.ShowLootstage}, Day={config.ShowDay}, BM={config.ShowBloodMoon}, Kills={config.ShowKills}, Enemy={config.ShowNearestEnemy}");
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            HemSoftQoL.LogError($"Failed to load from Gears settings: {ex.Message}");
             return false;
         }
     }
 
     /// <summary>
-    /// Parse a Switch element from Gears ModSettings.xml format.
-    /// Switch values use rightValue text (e.g., "Show"/"Hide") not booleans.
+    /// Parse a Setting element from Gears global settings.
+    /// Values are "Show"/"Hide" for display toggles.
     /// </summary>
-    private static bool ParseGearsSwitch(XmlNode category, string name, bool defaultValue)
+    private static bool ParseGearsSetting(XmlNode category, string name, bool defaultValue)
     {
-        var switchNode = category.SelectSingleNode($"Switch[@name='{name}']");
-        if (switchNode?.Attributes?["value"] == null) return defaultValue;
+        var settingNode = category.SelectSingleNode($"Setting[@name='{name}']");
+        if (settingNode?.Attributes?["value"] == null) return defaultValue;
 
-        var rightValue = switchNode.Attributes["rightValue"]?.Value ?? "Show";
-        var currentValue = switchNode.Attributes["value"].Value;
-        return currentValue.Equals(rightValue, StringComparison.OrdinalIgnoreCase);
+        var value = settingNode.Attributes["value"].Value;
+        return value.Equals("Show", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
