@@ -2,6 +2,16 @@
 
 All notable changes to HemSoft QoL will be documented in this file.
 
+## [1.4.0] - 2026-01-10
+
+### Added
+- **Vehicle Storage Support** - All inventory hotkeys now work with vehicle storage
+  - Quick Stack, Stash All, Restock, and Sort all work when accessing vehicle inventory
+  - Works with all vehicle types (motorcycles, 4x4s, gyrocopters, etc.)
+
+### Fixed
+- Vehicle storage hotkeys now properly access vehicle inventory instead of the wrong container
+
 ## [1.3.0] - 2026-01-08
 
 ### Added

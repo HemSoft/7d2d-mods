@@ -9,6 +9,7 @@ namespace HemSoft.QoL.Patches
     /// <summary>
     /// Harmony patches for inventory hotkey functionality.
     /// Hooks into XUiController.Update and filters for backpack window instances.
+    /// Supports both regular containers (ITileEntityLootable) and vehicle storage (XUiM_Vehicle).
     /// </summary>
     [HarmonyPatch(typeof(XUiController))]
     [HarmonyPatch("Update")]
@@ -25,122 +26,444 @@ namespace HemSoft.QoL.Patches
             
             // Only process when game is running
             if (!XUi.IsGameRunning()) return;
-            
-            // Get the container - this handles both regular containers AND vehicle storage
-            // The game uses lootContainer for both
-            var container = InventoryActions.GetActiveLootContainer(backpackWindow.xui);
-            if (container == null) return;
 
+            var xui = backpackWindow.xui;
             var config = HemSoftQoL.Config;
             if (config == null) return;
 
-            // Quick Stack: Deposit items matching existing stacks in container
+            // Check which storage type is open
+            var windowManager = xui.playerUI?.windowManager;
+            var isLootingOpen = windowManager?.IsWindowOpen("looting") ?? false;
+            var isVehicleStorageOpen = windowManager?.IsWindowOpen("vehiclestorage") ?? false;
+
+            // If neither is open, no action needed
+            if (!isLootingOpen && !isVehicleStorageOpen) return;
+
+            // Route to appropriate handler based on storage type
+            if (isVehicleStorageOpen)
+            {
+                // Vehicle storage is open - use vehicle-specific methods (XUiM_Vehicle API)
+                HandleVehicleStorageHotkeys(backpackWindow, config);
+            }
+            else if (isLootingOpen)
+            {
+                // Regular container is open - use ITileEntityLootable methods
+                HandleContainerHotkeys(backpackWindow, config);
+            }
+        }
+
+        /// <summary>
+        /// Handles hotkey actions for regular containers (chests, loot bags, etc.)
+        /// </summary>
+        private static void HandleContainerHotkeys(XUiC_BackpackWindow backpackWindow, HotkeyConfig config)
+        {
+            var container = backpackWindow.xui.lootContainer;
+            if (container == null) return;
+
             if (config.QuickStack.IsPressed())
             {
-                InventoryActions.QuickStack(backpackWindow, container);
+                ContainerActions.QuickStack(backpackWindow, container);
             }
-            // Stash All: Deposit all non-locked items
             else if (config.StashAll.IsPressed())
             {
-                InventoryActions.StashAll(backpackWindow, container);
+                ContainerActions.StashAll(backpackWindow, container);
             }
-            // Restock: Pull items from container to fill inventory stacks
             else if (config.Restock.IsPressed())
             {
-                InventoryActions.Restock(backpackWindow, container);
+                ContainerActions.Restock(backpackWindow, container);
             }
-            // Sort Container: Sort items in the open container
             else if (config.SortContainer.IsPressed())
             {
-                InventoryActions.SortContainer(backpackWindow, container);
+                ContainerActions.SortContainer(backpackWindow, container);
             }
-            // Sort Inventory: Sort items in player backpack
             else if (config.SortInventory.IsPressed())
             {
-                InventoryActions.SortInventory(backpackWindow);
+                ContainerActions.SortInventory(backpackWindow);
+            }
+        }
+
+        /// <summary>
+        /// Handles hotkey actions for vehicle storage.
+        /// Vehicle storage is accessed through XUiC_ItemStackGrid from the window controller,
+        /// NOT through EntityVehicle.lootContainer (that's a different container).
+        /// </summary>
+        private static void HandleVehicleStorageHotkeys(XUiC_BackpackWindow backpackWindow, HotkeyConfig config)
+        {
+            var xui = backpackWindow.xui;
+            var entityVehicle = xui.vehicle;
+            
+            if (entityVehicle == null) return;
+
+            var vehicleObj = entityVehicle.GetVehicle();
+            if (vehicleObj == null) return;
+
+            if (config.QuickStack.IsPressed())
+            {
+                VehicleActions.QuickStack(backpackWindow, entityVehicle, vehicleObj);
+            }
+            else if (config.StashAll.IsPressed())
+            {
+                VehicleActions.StashAll(backpackWindow, entityVehicle, vehicleObj);
+            }
+            else if (config.Restock.IsPressed())
+            {
+                VehicleActions.Restock(backpackWindow, entityVehicle, vehicleObj);
+            }
+            else if (config.SortContainer.IsPressed())
+            {
+                VehicleActions.SortVehicleStorage(backpackWindow, entityVehicle, vehicleObj);
+            }
+            else if (config.SortInventory.IsPressed())
+            {
+                ContainerActions.SortInventory(backpackWindow);
             }
         }
     }
 
     /// <summary>
-    /// Inventory action implementations using 7D2D V2.5 APIs.
-    /// Supports both regular containers (chests) and vehicle storage.
+    /// Vehicle storage inventory actions.
+    /// IMPORTANT: Vehicle storage is accessed through XUiC_ItemStackGrid from the "vehiclestorage" window,
+    /// NOT through EntityVehicle.lootContainer (that's a different container for vehicle destruction/corpse loot).
     /// </summary>
-    public static class InventoryActions
+    public static class VehicleActions
     {
         /// <summary>
-        /// Gets the active loot container from the XUi.
-        /// Checks both regular containers (xui.lootContainer) and vehicle storage.
-        /// In 7D2D V2.5, both regular containers AND vehicle storage use xui.lootContainer.
-        /// The vehicle storage window is "vehiclestorage" and when open, xui.lootContainer is set.
+        /// Gets the ItemStackGrid from the vehicle storage window - this contains the actual storage items.
         /// </summary>
-        public static ITileEntityLootable GetActiveLootContainer(XUi xui)
+        private static XUiC_ItemStackGrid GetVehicleStorageGrid(XUi xui)
         {
-            if (xui == null) return null;
-            
-            // The lootContainer property is used for BOTH regular containers AND vehicle storage
-            // When either the "looting" or "vehiclestorage" window is open, lootContainer is set
-            if (xui.lootContainer != null) return xui.lootContainer;
-            
-            // If lootContainer is null, try to get it from the vehicle storage window group
             try
             {
-                var windowManager = xui.playerUI?.windowManager;
-                if (windowManager != null && windowManager.IsWindowOpen("vehiclestorage"))
-                {
-                    // Try to get the vehicle storage window and access its tile entity
-                    var window = windowManager.GetWindow("vehiclestorage");
-                    if (window is XUiWindowGroup windowGroup)
-                    {
-                        // The XUiC_VehicleStorageWindowGroup should have a reference to the loot container
-                        var controller = windowGroup.Controller;
-                        if (controller != null)
-                        {
-                            // Use reflection to try to get the TileEntity if available
-                            var teField = controller.GetType().GetField("te", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                            if (teField != null)
-                            {
-                                var te = teField.GetValue(controller) as ITileEntityLootable;
-                                if (te != null) return te;
-                            }
-                            
-                            // Try property instead
-                            var teProperty = controller.GetType().GetProperty("te", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                            if (teProperty != null)
-                            {
-                                var te = teProperty.GetValue(controller) as ITileEntityLootable;
-                                if (te != null) return te;
-                            }
-                        }
-                    }
-                }
+                var window = xui.playerUI.windowManager.GetWindow("vehiclestorage");
+                if (window == null) return null;
+                
+                var controller = ((XUiWindowGroup)window).Controller;
+                if (controller == null) return null;
+                
+                return controller.GetChildByType<XUiC_ItemStackGrid>();
             }
             catch
             {
-                // Silently ignore window access errors
+                return null;
             }
-            
-            // Fallback: try to get from the vehicle entity directly
-            try
+        }
+        
+        /// <summary>
+        /// Updates the vehicle storage grid UI after modifying slots.
+        /// </summary>
+        private static void UpdateVehicleStorageUI(XUiC_ItemStackGrid grid, ItemStack[] slots)
+        {
+            // Get the individual stack controllers and update each one
+            var stackControllers = grid.GetItemStackControllers();
+            if (stackControllers != null)
             {
-                var vehicle = xui.vehicle?.GetVehicle();
-                if (vehicle?.entity != null)
+                for (int i = 0; i < stackControllers.Length && i < slots.Length; i++)
                 {
-                    var entityVehicle = vehicle.entity as EntityVehicle;
-                    if (entityVehicle?.lootContainer != null)
+                    if (stackControllers[i] != null)
                     {
-                        return entityVehicle.lootContainer;
+                        stackControllers[i].ItemStack = slots[i];
+                        stackControllers[i].ForceRefreshItemStack();
                     }
                 }
             }
-            catch
-            {
-                // Silently ignore vehicle access errors
-            }
-            
-            return null;
+            grid.IsDirty = true;
         }
 
+        /// <summary>
+        /// Deposits items from player inventory that match existing items in vehicle storage.
+        /// </summary>
+        public static void QuickStack(XUiC_BackpackWindow backpackWindow, EntityVehicle entityVehicle, Vehicle vehicle)
+        {
+            var xui = backpackWindow.xui;
+            var playerInventory = xui.PlayerInventory;
+            if (playerInventory == null) return;
+
+            var grid = GetVehicleStorageGrid(xui);
+            if (grid == null) return;
+
+            var vehicleSlots = grid.GetSlots();
+            if (vehicleSlots == null) return;
+
+            var backpackSlots = playerInventory.backpack.GetSlots();
+            var transferCount = 0;
+
+            for (var i = 0; i < backpackSlots.Length; i++)
+            {
+                var playerStack = backpackSlots[i];
+                if (playerStack.IsEmpty()) continue;
+
+                // Check if this item type exists in vehicle storage
+                var foundMatch = false;
+                foreach (var vehicleStack in vehicleSlots)
+                {
+                    if (vehicleStack.IsEmpty()) continue;
+                    if (!vehicleStack.itemValue.type.Equals(playerStack.itemValue.type)) continue;
+                    foundMatch = true;
+                    break;
+                }
+
+                if (!foundMatch) continue;
+
+                // Try to stack into existing slots first
+                var countBefore = playerStack.count;
+                for (var j = 0; j < vehicleSlots.Length && playerStack.count > 0; j++)
+                {
+                    var vehicleStack = vehicleSlots[j];
+                    if (vehicleStack.IsEmpty()) continue;
+                    if (!vehicleStack.itemValue.type.Equals(playerStack.itemValue.type)) continue;
+
+                    var itemClass = vehicleStack.itemValue.ItemClass;
+                    if (itemClass == null) continue;
+
+                    var maxStack = itemClass.Stacknumber.Value;
+                    var spaceAvailable = maxStack - vehicleStack.count;
+                    if (spaceAvailable <= 0) continue;
+
+                    var toTransfer = Mathf.Min(spaceAvailable, playerStack.count);
+                    vehicleStack.count += toTransfer;
+                    playerStack.count -= toTransfer;
+                    transferCount += toTransfer;
+                }
+
+                // Update backpack slot
+                if (playerStack.count != countBefore)
+                {
+                    if (playerStack.count <= 0)
+                    {
+                        playerInventory.backpack.SetSlot(i, ItemStack.Empty.Clone(), true);
+                    }
+                    else
+                    {
+                        playerInventory.backpack.SetSlot(i, playerStack, true);
+                    }
+                }
+            }
+
+            if (transferCount > 0)
+            {
+                // Update the grid UI
+                UpdateVehicleStorageUI(grid, vehicleSlots);
+                PlaySound(xui, "ui_loot");
+                HemSoftQoL.Log($"Quick Stack (Vehicle): Moved {transferCount} items");
+            }
+        }
+
+        /// <summary>
+        /// Deposits all items from player inventory into vehicle storage.
+        /// </summary>
+        public static void StashAll(XUiC_BackpackWindow backpackWindow, EntityVehicle entityVehicle, Vehicle vehicle)
+        {
+            var xui = backpackWindow.xui;
+            var playerInventory = xui.PlayerInventory;
+            if (playerInventory == null) return;
+
+            var grid = GetVehicleStorageGrid(xui);
+            if (grid == null) return;
+
+            var vehicleSlots = grid.GetSlots();
+            if (vehicleSlots == null) return;
+
+            var backpackSlots = playerInventory.backpack.GetSlots();
+            var transferCount = 0;
+
+            for (var i = 0; i < backpackSlots.Length; i++)
+            {
+                var playerStack = backpackSlots[i];
+                if (playerStack.IsEmpty()) continue;
+
+                var countBefore = playerStack.count;
+                
+                // Try to stack into existing matching slots first
+                for (var j = 0; j < vehicleSlots.Length && playerStack.count > 0; j++)
+                {
+                    var vehicleStack = vehicleSlots[j];
+                    if (vehicleStack.IsEmpty()) continue;
+                    if (!vehicleStack.itemValue.type.Equals(playerStack.itemValue.type)) continue;
+
+                    var itemClass = vehicleStack.itemValue.ItemClass;
+                    if (itemClass == null) continue;
+
+                    var maxStack = itemClass.Stacknumber.Value;
+                    var spaceAvailable = maxStack - vehicleStack.count;
+                    if (spaceAvailable <= 0) continue;
+
+                    var toTransfer = Mathf.Min(spaceAvailable, playerStack.count);
+                    vehicleStack.count += toTransfer;
+                    playerStack.count -= toTransfer;
+                    transferCount += toTransfer;
+                }
+
+                // If still have items, try to add to empty slots
+                if (playerStack.count > 0)
+                {
+                    for (var j = 0; j < vehicleSlots.Length && playerStack.count > 0; j++)
+                    {
+                        if (!vehicleSlots[j].IsEmpty()) continue;
+
+                        // Put remaining stack in empty slot
+                        vehicleSlots[j] = playerStack.Clone();
+                        transferCount += playerStack.count;
+                        playerStack.count = 0;
+                    }
+                }
+
+                // Update backpack slot
+                if (playerStack.count != countBefore)
+                {
+                    if (playerStack.count <= 0)
+                    {
+                        playerInventory.backpack.SetSlot(i, ItemStack.Empty.Clone(), true);
+                    }
+                    else
+                    {
+                        playerInventory.backpack.SetSlot(i, playerStack, true);
+                    }
+                }
+            }
+
+            if (transferCount > 0)
+            {
+                UpdateVehicleStorageUI(grid, vehicleSlots);
+                PlaySound(xui, "ui_loot");
+                HemSoftQoL.Log($"Stash All (Vehicle): Moved {transferCount} items");
+            }
+        }
+
+        /// <summary>
+        /// Pulls items from vehicle storage to fill existing stacks in player inventory.
+        /// </summary>
+        public static void Restock(XUiC_BackpackWindow backpackWindow, EntityVehicle entityVehicle, Vehicle vehicle)
+        {
+            var xui = backpackWindow.xui;
+            var playerInventory = xui.PlayerInventory;
+            if (playerInventory == null) return;
+
+            var grid = GetVehicleStorageGrid(xui);
+            if (grid == null) return;
+
+            var vehicleSlots = grid.GetSlots();
+            if (vehicleSlots == null) return;
+
+            var backpackSlots = playerInventory.backpack.GetSlots();
+            var transferCount = 0;
+
+            for (var i = 0; i < backpackSlots.Length; i++)
+            {
+                var playerStack = backpackSlots[i];
+                if (playerStack.IsEmpty()) continue;
+
+                var itemClass = playerStack.itemValue.ItemClass;
+                if (itemClass == null) continue;
+
+                var maxStack = itemClass.Stacknumber.Value;
+                if (playerStack.count >= maxStack) continue; // Already full
+
+                // Look for matching items in vehicle storage
+                for (var j = 0; j < vehicleSlots.Length; j++)
+                {
+                    var vehicleStack = vehicleSlots[j];
+                    if (vehicleStack.IsEmpty()) continue;
+                    if (!vehicleStack.itemValue.type.Equals(playerStack.itemValue.type)) continue;
+
+                    // Calculate how many we can take
+                    var spaceAvailable = maxStack - playerStack.count;
+                    var toTransfer = Mathf.Min(spaceAvailable, vehicleStack.count);
+
+                    if (toTransfer > 0)
+                    {
+                        playerStack.count += toTransfer;
+                        vehicleStack.count -= toTransfer;
+                        transferCount += toTransfer;
+
+                        playerInventory.backpack.SetSlot(i, playerStack, true);
+
+                        if (vehicleStack.count <= 0)
+                        {
+                            vehicleSlots[j] = ItemStack.Empty.Clone();
+                        }
+
+                        // Check if player stack is now full
+                        if (playerStack.count >= maxStack) break;
+                    }
+                }
+            }
+
+            if (transferCount > 0)
+            {
+                UpdateVehicleStorageUI(grid, vehicleSlots);
+                PlaySound(xui, "ui_loot");
+                HemSoftQoL.Log($"Restock (Vehicle): Moved {transferCount} items");
+            }
+        }
+
+        /// <summary>
+        /// Sorts items in vehicle storage alphabetically by item name.
+        /// </summary>
+        public static void SortVehicleStorage(XUiC_BackpackWindow backpackWindow, EntityVehicle entityVehicle, Vehicle vehicle)
+        {
+            var xui = backpackWindow.xui;
+
+            var grid = GetVehicleStorageGrid(xui);
+            if (grid == null) return;
+
+            var vehicleSlots = grid.GetSlots();
+            if (vehicleSlots == null) return;
+
+            var itemList = new List<ItemStack>();
+
+            // Collect all non-empty items
+            for (var i = 0; i < vehicleSlots.Length; i++)
+            {
+                if (!vehicleSlots[i].IsEmpty())
+                {
+                    itemList.Add(vehicleSlots[i].Clone());
+                }
+            }
+
+            // Sort alphabetically by localized name
+            itemList.Sort((a, b) =>
+            {
+                var nameA = GetItemName(a);
+                var nameB = GetItemName(b);
+                return string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
+            });
+
+            // Clear slots and refill sorted
+            for (var i = 0; i < vehicleSlots.Length; i++)
+            {
+                if (i < itemList.Count)
+                {
+                    vehicleSlots[i] = itemList[i];
+                }
+                else
+                {
+                    vehicleSlots[i] = ItemStack.Empty.Clone();
+                }
+            }
+
+            UpdateVehicleStorageUI(grid, vehicleSlots);
+            PlaySound(xui, "ui_loot");
+            HemSoftQoL.Log($"Sort Vehicle Storage: Sorted {itemList.Count} items");
+        }
+
+        private static string GetItemName(ItemStack stack)
+        {
+            if (stack.IsEmpty()) return string.Empty;
+            var itemClass = stack.itemValue.ItemClass;
+            return itemClass?.GetLocalizedItemName() ?? itemClass?.Name ?? string.Empty;
+        }
+
+        private static void PlaySound(XUi xui, string soundName)
+        {
+            xui?.playerUI?.entityPlayer?.PlayOneShot(soundName);
+        }
+    }
+
+    /// <summary>
+    /// Regular container inventory actions using ITileEntityLootable APIs.
+    /// </summary>
+    public static class ContainerActions
+    {
         /// <summary>
         /// Deposits items from player inventory that match existing stacks in the container.
         /// </summary>
@@ -155,8 +478,6 @@ namespace HemSoft.QoL.Patches
             if (containerItems == null) return;
             
             var transferCount = 0;
-
-            // Get backpack slots
             var backpackSlots = playerInventory.backpack.GetSlots();
 
             for (var i = 0; i < backpackSlots.Length; i++)
@@ -178,7 +499,6 @@ namespace HemSoft.QoL.Patches
                     {
                         transferCount += countBefore - playerStack.count;
 
-                        // Update player backpack slot
                         if (playerStack.count == 0)
                         {
                             playerInventory.backpack.SetSlot(i, ItemStack.Empty.Clone(), true);
@@ -219,7 +539,6 @@ namespace HemSoft.QoL.Patches
 
                 var countBefore = playerStack.count;
 
-                // Try to add to container (TryStackItem or AddItem)
                 var result = container.TryStackItem(0, playerStack);
                 if (result.anyMoved)
                 {
@@ -261,8 +580,6 @@ namespace HemSoft.QoL.Patches
             if (containerItems == null) return;
             
             var transferCount = 0;
-
-            // Check player backpack for partial stacks
             var backpackSlots = playerInventory.backpack.GetSlots();
 
             for (var i = 0; i < backpackSlots.Length; i++)
@@ -274,16 +591,14 @@ namespace HemSoft.QoL.Patches
                 if (itemClass == null) continue;
 
                 var maxStack = itemClass.Stacknumber.Value;
-                if (playerStack.count >= maxStack) continue; // Already full
+                if (playerStack.count >= maxStack) continue;
 
-                // Look for matching items in container
                 for (var j = 0; j < containerItems.Length; j++)
                 {
                     var containerStack = containerItems[j];
                     if (containerStack.IsEmpty()) continue;
                     if (!containerStack.itemValue.type.Equals(playerStack.itemValue.type)) continue;
 
-                    // Calculate how many we can take
                     var spaceAvailable = maxStack - playerStack.count;
                     var toTransfer = Mathf.Min(spaceAvailable, containerStack.count);
 
@@ -304,7 +619,6 @@ namespace HemSoft.QoL.Patches
                             container.UpdateSlot(j, containerStack);
                         }
 
-                        // Check if player stack is now full
                         if (playerStack.count >= maxStack) break;
                     }
                 }
@@ -331,7 +645,6 @@ namespace HemSoft.QoL.Patches
             
             var itemList = new List<ItemStack>();
 
-            // Collect all non-empty items
             for (var i = 0; i < containerItems.Length; i++)
             {
                 if (!containerItems[i].IsEmpty())
@@ -340,7 +653,6 @@ namespace HemSoft.QoL.Patches
                 }
             }
 
-            // Sort alphabetically by localized name
             itemList.Sort((a, b) => 
             {
                 var nameA = GetItemName(a);
@@ -348,7 +660,6 @@ namespace HemSoft.QoL.Patches
                 return string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
             });
 
-            // Clear container and refill sorted
             for (var i = 0; i < containerItems.Length; i++)
             {
                 if (i < itemList.Count)
@@ -378,7 +689,6 @@ namespace HemSoft.QoL.Patches
             var backpackSlots = playerInventory.backpack.GetSlots();
             var itemList = new List<ItemStack>();
 
-            // Collect all non-empty items
             for (var i = 0; i < backpackSlots.Length; i++)
             {
                 if (!backpackSlots[i].IsEmpty())
@@ -387,7 +697,6 @@ namespace HemSoft.QoL.Patches
                 }
             }
 
-            // Sort alphabetically by localized name
             itemList.Sort((a, b) =>
             {
                 var nameA = GetItemName(a);
@@ -395,7 +704,6 @@ namespace HemSoft.QoL.Patches
                 return string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
             });
 
-            // Clear backpack and refill sorted
             for (var i = 0; i < backpackSlots.Length; i++)
             {
                 if (i < itemList.Count)
