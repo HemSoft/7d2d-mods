@@ -48,6 +48,10 @@ Usage:
   hs bloodmoon    - Toggle Blood Moon display
   hs kills        - Toggle Kills display
   hs enemy        - Toggle Nearest Enemy display
+  hs biome        - Toggle Biome display
+  hs poi          - Toggle POI/Location display
+  hs coords       - Toggle Coordinates display
+  hs session      - Toggle Session time display
   hs all          - Show all info panel elements
   hs none         - Hide all info panel elements
 
@@ -111,6 +115,22 @@ Current Hotkeys (when container is open):
                 config.ShowNearestEnemy = !config.ShowNearestEnemy;
                 message = $"Nearest Enemy: {(config.ShowNearestEnemy ? "ON" : "OFF")}";
                 break;
+            case "biome":
+                config.ShowBiome = !config.ShowBiome;
+                message = $"Biome: {(config.ShowBiome ? "ON" : "OFF")}";
+                break;
+            case "poi":
+                config.ShowPOI = !config.ShowPOI;
+                message = $"POI: {(config.ShowPOI ? "ON" : "OFF")}";
+                break;
+            case "coords":
+                config.ShowCoords = !config.ShowCoords;
+                message = $"Coords: {(config.ShowCoords ? "ON" : "OFF")}";
+                break;
+            case "session":
+                config.ShowSession = !config.ShowSession;
+                message = $"Session: {(config.ShowSession ? "ON" : "OFF")}";
+                break;
             case "all":
                 message = EnableAll(config);
                 break;
@@ -137,6 +157,10 @@ Current Hotkeys (when container is open):
         config.ShowBloodMoon = true;
         config.ShowKills = true;
         config.ShowNearestEnemy = true;
+        config.ShowBiome = true;
+        config.ShowPOI = true;
+        config.ShowCoords = true;
+        config.ShowSession = true;
         return "All info panel elements enabled.";
     }
 
@@ -149,6 +173,10 @@ Current Hotkeys (when container is open):
         config.ShowBloodMoon = false;
         config.ShowKills = false;
         config.ShowNearestEnemy = false;
+        config.ShowBiome = false;
+        config.ShowPOI = false;
+        config.ShowCoords = false;
+        config.ShowSession = false;
         return "All info panel elements disabled.";
     }
 
@@ -165,6 +193,10 @@ Current Hotkeys (when container is open):
         console.Output($"  Blood Moon: {OnOff(config.ShowBloodMoon)}");
         console.Output($"  Kills:      {OnOff(config.ShowKills)}");
         console.Output($"  Enemy:      {OnOff(config.ShowNearestEnemy)}");
+        console.Output($"  Biome:      {OnOff(config.ShowBiome)}");
+        console.Output($"  POI:        {OnOff(config.ShowPOI)}");
+        console.Output($"  Coords:     {OnOff(config.ShowCoords)}");
+        console.Output($"  Session:    {OnOff(config.ShowSession)}");
         console.Output("");
         console.Output("=== Hotkeys (when container open) ===");
         console.Output($"  Quick Stack:    {FormatHotkey(hotkeys.QuickStack)}");
@@ -194,6 +226,11 @@ public class DisplayConfig
     public bool ShowBloodMoon { get; set; } = true;
     public bool ShowKills { get; set; } = true;
     public bool ShowNearestEnemy { get; set; } = true;
+    public bool ShowBiome { get; set; } = false;
+    public bool ShowPOI { get; set; } = true;
+    public bool ShowCoords { get; set; } = false;
+    public bool ShowSession { get; set; } = true;
+    public int PanelWidth { get; set; } = 140;
 
     private string _modPath;
 
@@ -271,8 +308,23 @@ public class DisplayConfig
             config.ShowBloodMoon = ParseGearsSetting(category, "ShowBloodMoon", true);
             config.ShowKills = ParseGearsSetting(category, "ShowKills", true);
             config.ShowNearestEnemy = ParseGearsSetting(category, "ShowNearestEnemy", true);
+            config.ShowBiome = ParseGearsSetting(category, "ShowBiome", false);
+            config.ShowPOI = ParseGearsSetting(category, "ShowPOI", true);
+            config.ShowCoords = ParseGearsSetting(category, "ShowCoords", false);
+            config.ShowSession = ParseGearsSetting(category, "ShowSession", true);
+            
+            // Load panel width from PanelSettings category
+            var panelSettings = modNode.SelectSingleNode(".//Tab[@name='Info Panel']//Category[@name='PanelSettings']");
+            if (panelSettings != null)
+            {
+                var widthNode = panelSettings.SelectSingleNode("Setting[@name='PanelWidth']");
+                if (widthNode?.Attributes?["value"] != null && int.TryParse(widthNode.Attributes["value"].Value, out var width))
+                {
+                    config.PanelWidth = width;
+                }
+            }
 
-            HemSoftQoL.Log($"Loaded display settings: Level={config.ShowLevel}, GS={config.ShowGamestage}, LS={config.ShowLootstage}, Day={config.ShowDay}, BM={config.ShowBloodMoon}, Kills={config.ShowKills}, Enemy={config.ShowNearestEnemy}");
+            HemSoftQoL.Log($"Loaded display settings: Level={config.ShowLevel}, GS={config.ShowGamestage}, LS={config.ShowLootstage}, Day={config.ShowDay}, BM={config.ShowBloodMoon}, Kills={config.ShowKills}, Enemy={config.ShowNearestEnemy}, Width={config.PanelWidth}");
 
             return true;
         }
@@ -311,6 +363,17 @@ public class DisplayConfig
         config.ShowBloodMoon = ParseLegacyBool(doc, "BloodMoon", true);
         config.ShowKills = ParseLegacyBool(doc, "Kills", true);
         config.ShowNearestEnemy = ParseLegacyBool(doc, "NearestEnemy", true);
+        config.ShowBiome = ParseLegacyBool(doc, "Biome", false);
+        config.ShowPOI = ParseLegacyBool(doc, "POI", true);
+        config.ShowCoords = ParseLegacyBool(doc, "Coords", false);
+        config.ShowSession = ParseLegacyBool(doc, "Session", true);
+        
+        // Load panel width
+        var widthNode = doc.SelectSingleNode("//PanelWidth");
+        if (widthNode?.Attributes?["value"] != null && int.TryParse(widthNode.Attributes["value"].Value, out var width))
+        {
+            config.PanelWidth = width;
+        }
     }
 
     private static bool ParseLegacyBool(XmlDocument doc, string name, bool defaultValue)
@@ -358,6 +421,10 @@ public class DisplayConfig
             UpdateGearsSwitch(category, "ShowBloodMoon", ShowBloodMoon);
             UpdateGearsSwitch(category, "ShowKills", ShowKills);
             UpdateGearsSwitch(category, "ShowNearestEnemy", ShowNearestEnemy);
+            UpdateGearsSwitch(category, "ShowBiome", ShowBiome);
+            UpdateGearsSwitch(category, "ShowPOI", ShowPOI);
+            UpdateGearsSwitch(category, "ShowCoords", ShowCoords);
+            UpdateGearsSwitch(category, "ShowSession", ShowSession);
 
             doc.Save(path);
             HemSoftQoL.Log($"Display config saved to ModSettings.xml (Gears)");
@@ -411,6 +478,10 @@ public class DisplayConfig
             AddDisplayElement(doc, display, "BloodMoon", ShowBloodMoon);
             AddDisplayElement(doc, display, "Kills", ShowKills);
             AddDisplayElement(doc, display, "NearestEnemy", ShowNearestEnemy);
+            AddDisplayElement(doc, display, "Biome", ShowBiome);
+            AddDisplayElement(doc, display, "POI", ShowPOI);
+            AddDisplayElement(doc, display, "Coords", ShowCoords);
+            AddDisplayElement(doc, display, "Session", ShowSession);
 
             doc.Save(path);
             HemSoftQoL.Log($"Display config saved to {path}");

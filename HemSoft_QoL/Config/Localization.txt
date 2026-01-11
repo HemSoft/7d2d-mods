@@ -33,3 +33,15 @@ hemsoftqol_show_kills,HemSoftQoL,Settings,False,False,Show Kills,Setting to show
 hemsoftqol_show_kills_tt,HemSoftQoL,Settings,False,False,Display your total zombie kills,Tooltip for kills setting
 hemsoftqol_show_enemy,HemSoftQoL,Settings,False,False,Show Nearest Enemy,Setting to show nearest enemy
 hemsoftqol_show_enemy_tt,HemSoftQoL,Settings,False,False,Display the nearest hostile and enemy count,Tooltip for enemy setting
+hemsoftqol_show_biome,HemSoftQoL,Settings,False,False,Show Biome,Setting to show current biome
+hemsoftqol_show_biome_tt,HemSoftQoL,Settings,False,False,Display the name of the biome you are in,Tooltip for biome setting
+hemsoftqol_show_poi,HemSoftQoL,Settings,False,False,Show Location,Setting to show POI/location
+hemsoftqol_show_poi_tt,HemSoftQoL,Settings,False,False,Display your current location or POI,Tooltip for POI setting
+hemsoftqol_show_coords,HemSoftQoL,Settings,False,False,Show Coordinates,Setting to show coordinates
+hemsoftqol_show_coords_tt,HemSoftQoL,Settings,False,False,Display your current X and Z coordinates,Tooltip for coordinates setting
+hemsoftqol_show_session,HemSoftQoL,Settings,False,False,Show Session Time,Setting to show session time
+hemsoftqol_show_session_tt,HemSoftQoL,Settings,False,False,Display your current session playtime (resets on game restart),Tooltip for session time setting
+hemsoftqol_cat_panelsettings,HemSoftQoL,Settings,False,False,Panel Settings,Category for info panel appearance settings
+hemsoftqol_cat_panelsettings_tt,HemSoftQoL,Settings,False,False,Adjust the appearance of the info panel,Tooltip for panel settings category
+hemsoftqol_panel_width,HemSoftQoL,Settings,False,False,Panel Width,Setting for panel width
+hemsoftqol_panel_width_tt,HemSoftQoL,Settings,False,False,Width of the info panel in pixels (100-300),Tooltip for panel width setting

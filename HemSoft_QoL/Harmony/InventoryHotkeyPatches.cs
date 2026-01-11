@@ -420,12 +420,20 @@ namespace HemSoft.QoL.Patches
                 }
             }
 
-            // Sort alphabetically by localized name
+            // Sort alphabetically by localized name, then by quality
             itemList.Sort((a, b) =>
             {
                 var nameA = GetItemName(a);
                 var nameB = GetItemName(b);
-                return string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
+                
+                // Primary sort: alphabetically by name
+                var nameComparison = string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
+                if (nameComparison != 0) return nameComparison;
+                
+                // Secondary sort: by quality (ascending - lower quality first, matching game default)
+                var qualityA = a.itemValue.Quality;
+                var qualityB = b.itemValue.Quality;
+                return qualityA.CompareTo(qualityB);
             });
 
             // Clear slots and refill sorted
@@ -657,7 +665,15 @@ namespace HemSoft.QoL.Patches
             {
                 var nameA = GetItemName(a);
                 var nameB = GetItemName(b);
-                return string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
+                
+                // Primary sort: alphabetically by name
+                var nameComparison = string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
+                if (nameComparison != 0) return nameComparison;
+                
+                // Secondary sort: by quality (ascending - lower quality first, matching game default)
+                var qualityA = a.itemValue.Quality;
+                var qualityB = b.itemValue.Quality;
+                return qualityA.CompareTo(qualityB);
             });
 
             for (var i = 0; i < containerItems.Length; i++)
@@ -701,7 +717,15 @@ namespace HemSoft.QoL.Patches
             {
                 var nameA = GetItemName(a);
                 var nameB = GetItemName(b);
-                return string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
+                
+                // Primary sort: alphabetically by name
+                var nameComparison = string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
+                if (nameComparison != 0) return nameComparison;
+                
+                // Secondary sort: by quality (ascending - lower quality first, matching game default)
+                var qualityA = a.itemValue.Quality;
+                var qualityB = b.itemValue.Quality;
+                return qualityA.CompareTo(qualityB);
             });
 
             for (var i = 0; i < backpackSlots.Length; i++)

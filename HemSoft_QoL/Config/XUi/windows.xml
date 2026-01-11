@@ -93,6 +93,42 @@
                        font_size="16" color="{enemycountcolor}" text="{enemycount}" 
                        justify="right" font="ReferenceFont" />
             </rect>
+            
+            <!-- Biome Row -->
+            <rect name="biomeRow" pos="0,-188" width="140" height="20" visible="{showbiome}">
+                <label depth="4" pos="8,0" width="60" height="20" 
+                       font_size="14" color="180,180,180,255" text="Biome" />
+                <label depth="4" name="biomeValue" pos="70,0" width="62" height="20" 
+                       font_size="14" color="150,220,150,255" text="{biomename}" 
+                       justify="right" font="ReferenceFont" />
+            </rect>
+            
+            <!-- POI Row -->
+            <rect name="poiRow" pos="0,-208" width="140" height="20" visible="{showpoi}">
+                <label depth="4" pos="8,0" width="60" height="20" 
+                       font_size="14" color="180,180,180,255" text="Location" />
+                <label depth="4" name="poiValue" pos="70,0" width="62" height="20" 
+                       font_size="14" color="200,150,255,255" text="{poiname}" 
+                       justify="right" font="ReferenceFont" />
+            </rect>
+            
+            <!-- Coords Row -->
+            <rect name="coordsRow" pos="0,-228" width="140" height="20" visible="{showcoords}">
+                <label depth="4" pos="8,0" width="60" height="20" 
+                       font_size="14" color="180,180,180,255" text="Coords" />
+                <label depth="4" name="coordsValue" pos="70,0" width="62" height="20" 
+                       font_size="14" color="180,180,180,255" text="{coords}" 
+                       justify="right" font="ReferenceFont" />
+            </rect>
+            
+            <!-- Session Time Row (current game session only - game doesn't persist total time) -->
+            <rect name="sessionRow" pos="0,-248" width="140" height="20" visible="{showsession}">
+                <label depth="4" pos="8,0" width="60" height="20" 
+                       font_size="14" color="180,180,180,255" text="Session" />
+                <label depth="4" name="sessionValue" pos="70,0" width="62" height="20" 
+                       font_size="14" color="100,180,255,255" text="{session}" 
+                       justify="right" font="ReferenceFont" />
+            </rect>
         </rect>
     </append>
 </configs>

@@ -26,6 +26,12 @@ public class XUiC_HemSoftInfoPanel : XUiController
     private float _cachedNearestEnemyDist = -1f;
     private string _cachedNearestEnemyName = "";
     private int _cachedEnemyCount;
+    private string _cachedBiomeName = "";
+    private string _cachedPOIName = "";
+    private int _cachedPOITier = 0;
+    private string _cachedCoords = "";
+    private string _cachedSession = "";
+    private float _sessionStartTime = -1f;  // Track session start time (game doesn't persist total time)
     private float _updateTimer;
     private const float UpdateInterval = 0.25f;
     
@@ -41,15 +47,18 @@ public class XUiC_HemSoftInfoPanel : XUiController
     // Position mode
     private static bool _positionMode;
     private static Vector2i _customPosition = new Vector2i(190, 170);
+    private static int _customWidth = 140; // Custom panel width
     private static bool _positionLoaded;
     private const int MoveStep = 5;
     private const int MoveStepFast = 20;
+    private const int WidthStep = 10;
+    private const int WidthMin = 100;
+    private const int WidthMax = 300;
     
     // Layout constants
     private const int TitleHeight = 28;
     private const int RowHeight = 20;
     private const int PanelPadding = 6;
-    private const int PanelWidth = 140;
     
     // Track if layout needs update
     private bool _layoutDirty = true;
@@ -89,19 +98,20 @@ public class XUiC_HemSoftInfoPanel : XUiController
         {
             _positionMode = !_positionMode;
             if (_positionMode)
-                HemSoftQoL.Log("Position mode ON - Use Arrow Keys to move (hold Shift for faster). Press Alt+P to save and exit.");
+                HemSoftQoL.Log("Position mode ON - Arrow Keys: move | +/-: width | Shift: faster | Alt+P: save & exit");
             else
             {
                 SavePosition();
-                HemSoftQoL.Log("Position mode OFF - Position saved.");
+                HemSoftQoL.Log("Position mode OFF - Position and width saved.");
             }
         }
 
-        // Handle arrow key movement in position mode
+        // Handle arrow key movement and width adjustment in position mode
         if (_positionMode)
         {
             var step = Input.GetKey(KeyCode.LeftShift) ? MoveStepFast : MoveStep;
             var moved = false;
+            var resized = false;
 
             if (Input.GetKeyDown(KeyCode.LeftArrow))
             {
@@ -123,9 +133,28 @@ public class XUiC_HemSoftInfoPanel : XUiController
                 _customPosition.y -= step;
                 moved = true;
             }
+            
+            // Width adjustment with + and - keys
+            if (Input.GetKeyDown(KeyCode.Equals) || Input.GetKeyDown(KeyCode.KeypadPlus))
+            {
+                _customWidth = Mathf.Clamp(_customWidth + WidthStep, WidthMin, WidthMax);
+                resized = true;
+            }
+            if (Input.GetKeyDown(KeyCode.Minus) || Input.GetKeyDown(KeyCode.KeypadMinus))
+            {
+                _customWidth = Mathf.Clamp(_customWidth - WidthStep, WidthMin, WidthMax);
+                resized = true;
+            }
 
             if (moved)
                 ApplyPosition();
+            if (resized)
+            {
+                _layoutDirty = true;
+                UpdateLayout(); // Immediately apply width changes
+                SavePosition(); // Save new width to XML
+                HemSoftQoL.Log($"Panel width: {_customWidth}");
+            }
         }
 
         // Get player reference
@@ -165,6 +194,12 @@ public class XUiC_HemSoftInfoPanel : XUiController
 
         // Update nearest enemy (always recalculate as enemies move)
         UpdateNearestEnemy(world);
+        
+        // Update location info (biome, POI, coords)
+        UpdateLocationInfo(world);
+        
+        // Update session time
+        UpdateSession(world);
 
         if (_isDirty)
         {
@@ -249,16 +284,67 @@ public class XUiC_HemSoftInfoPanel : XUiController
             ("bloodmoonRow", config.ShowBloodMoon),
             ("killsRow", config.ShowKills),
             ("enemyRow", config.ShowNearestEnemy),
-            ("enemyCountRow", config.ShowNearestEnemy) // Same visibility as enemy
+            ("enemyCountRow", config.ShowNearestEnemy), // Same visibility as enemy
+            ("biomeRow", config.ShowBiome),
+            ("poiRow", config.ShowPOI),
+            ("coordsRow", config.ShowCoords),
+            ("sessionRow", config.ShowSession)
         };
         
+        // Get panel width first (needed for row sizing)
+        int panelWidth = _customWidth; // Use custom width from position mode
         int visibleCount = 0;
         int yPos = -TitleHeight; // Start below title bar
+        
+        // Update title bar width (gray background behind "Player Info")
+        var titlebar = GetChildById("titlebar");
+        if (titlebar?.ViewComponent != null)
+        {
+            // Titlebar is inset by 2 pixels on each side
+            titlebar.ViewComponent.Size = new Vector2i(panelWidth - 4, 22);
+        }
+        
+        // Update title label width (the "Player Info" text itself)
+        // Find it by checking direct children at y=-4 position
+        for (int i = 0; i < children.Count; i++)
+        {
+            var child = children[i];
+            if (child?.ViewComponent != null && 
+                child.ViewComponent.Position.y == -4 &&
+                child.ViewComponent is XUiV_Label)
+            {
+                // This is the title label - resize to keep it centered
+                child.ViewComponent.Size = new Vector2i(panelWidth - 10, 20);
+                break;
+            }
+        }
         
         foreach (var (rowName, isVisible) in rows)
         {
             var row = GetChildById(rowName);
             if (row?.ViewComponent == null) continue;
+            
+            // Update row width to match panel width
+            row.ViewComponent.Size = new Vector2i(panelWidth, RowHeight);
+            
+            // Find and resize the value label (right-aligned label in each row)
+            // Value labels are named like "levelValue", "gamestageValue", etc.
+            var valueChildName = rowName.Replace("Row", "Value");
+            var valueLabel = row.GetChildById(valueChildName);
+            if (valueLabel?.ViewComponent != null)
+            {
+                // Get original position - varies by row (70, 80, or 85)
+                int originalX = valueLabel.ViewComponent.Position.x;
+                
+                // Calculate new width: panelWidth - originalX - rightPadding
+                int rightPadding = 8;
+                int newWidth = panelWidth - originalX - rightPadding;
+                
+                if (newWidth > 20) // Minimum reasonable width
+                {
+                    valueLabel.ViewComponent.Size = new Vector2i(newWidth, RowHeight);
+                }
+            }
             
             if (isVisible)
             {
@@ -274,21 +360,24 @@ public class XUiC_HemSoftInfoPanel : XUiController
         int panelHeight = TitleHeight + (visibleCount * RowHeight) + PanelPadding;
         
         // Resize main panel and background sprites
-        ViewComponent.Size = new Vector2i(PanelWidth, panelHeight);
+        ViewComponent.Size = new Vector2i(panelWidth, panelHeight);
         
         // Update background sprite
         var background = GetChildById("background");
         if (background?.ViewComponent != null)
         {
-            background.ViewComponent.Size = new Vector2i(PanelWidth, panelHeight);
+            background.ViewComponent.Size = new Vector2i(panelWidth, panelHeight);
         }
         
         // Update border sprite
         var border = GetChildById("border");
         if (border?.ViewComponent != null)
         {
-            border.ViewComponent.Size = new Vector2i(PanelWidth, panelHeight);
+            border.ViewComponent.Size = new Vector2i(panelWidth, panelHeight);
         }
+        
+        // Reapply custom position after resizing to prevent panel from moving
+        ApplyPosition();
         
         HemSoftQoL.Log($"Panel layout updated: {visibleCount} rows, height={panelHeight}");
     }
@@ -326,8 +415,10 @@ public class XUiC_HemSoftInfoPanel : XUiController
                     _customPosition.x = x;
                 if (int.TryParse(node.Attributes["y"]?.Value, out var y))
                     _customPosition.y = y;
+                if (int.TryParse(node.Attributes["width"]?.Value, out var width))
+                    _customWidth = Mathf.Clamp(width, WidthMin, WidthMax);
 
-                HemSoftQoL.Log($"InfoPanel position loaded: {_customPosition.x}, {_customPosition.y}");
+                HemSoftQoL.Log($"InfoPanel position loaded: {_customPosition.x}, {_customPosition.y}, width: {_customWidth}");
             }
         }
         catch
@@ -351,10 +442,11 @@ public class XUiC_HemSoftInfoPanel : XUiController
             var pos = doc.CreateElement("Position");
             pos.SetAttribute("x", _customPosition.x.ToString());
             pos.SetAttribute("y", _customPosition.y.ToString());
+            pos.SetAttribute("width", _customWidth.ToString());
             root.AppendChild(pos);
 
             doc.Save(path);
-            HemSoftQoL.Log($"InfoPanel position saved: {_customPosition.x}, {_customPosition.y}");
+            HemSoftQoL.Log($"InfoPanel position saved: {_customPosition.x}, {_customPosition.y}, width: {_customWidth}");
         }
         catch (System.Exception ex)
         {
@@ -389,6 +481,18 @@ public class XUiC_HemSoftInfoPanel : XUiController
                 return true;
             case "shownearestenemy":
                 value = config?.ShowNearestEnemy == true ? "true" : "false";
+                return true;
+            case "showbiome":
+                value = config?.ShowBiome == true ? "true" : "false";
+                return true;
+            case "showpoi":
+                value = config?.ShowPOI == true ? "true" : "false";
+                return true;
+            case "showcoords":
+                value = config?.ShowCoords == true ? "true" : "false";
+                return true;
+            case "showsession":
+                value = config?.ShowSession == true ? "true" : "false";
                 return true;
 
             // Value bindings
@@ -463,6 +567,22 @@ public class XUiC_HemSoftInfoPanel : XUiController
                     value = "255,180,50,255"; // Orange = several
                 else
                     value = "255,255,100,255"; // Yellow = few
+                return true;
+
+            case "biomename":
+                value = _cachedBiomeName;
+                return true;
+
+            case "poiname":
+                value = _cachedPOIName;
+                return true;
+
+            case "coords":
+                value = _cachedCoords;
+                return true;
+
+            case "session":
+                value = _cachedSession;
                 return true;
 
             case "positionmode":
@@ -554,6 +674,145 @@ public class XUiC_HemSoftInfoPanel : XUiController
         }
         
         return false;
+    }
+
+    private void UpdateLocationInfo(World world)
+    {
+        if (_player == null || world == null) return;
+
+        var oldBiome = _cachedBiomeName;
+        var oldPOI = _cachedPOIName;
+        var oldCoords = _cachedCoords;
+
+        // Get biome name
+        try
+        {
+            var biome = world.GetBiome((int)_player.position.x, (int)_player.position.z);
+            _cachedBiomeName = biome?.m_sBiomeName ?? "Unknown";
+        }
+        catch
+        {
+            _cachedBiomeName = "Unknown";
+        }
+
+        // Get POI name (if near one)
+        _cachedPOIName = GetNearestPOIName(world);
+
+        // Get coordinates
+        var x = (int)_player.position.x;
+        var z = (int)_player.position.z;
+        _cachedCoords = $"{x}, {z}";
+
+        // Mark dirty if location changed
+        if (oldBiome != _cachedBiomeName || oldPOI != _cachedPOIName || oldCoords != _cachedCoords)
+            _isDirty = true;
+    }
+
+    private string GetNearestPOIName(World world)
+    {
+        if (_player == null || world == null) return "Exploring";
+
+        try
+        {
+            var playerPos = _player.position;
+            var blockX = (int)playerPos.x;
+            var blockZ = (int)playerPos.z;
+            
+            // Method 1: Try GetPrefabFromWorldPosInside
+            var decorator = GameManager.Instance?.GetDynamicPrefabDecorator();
+            if (decorator != null)
+            {
+                var prefabInstance = decorator.GetPrefabFromWorldPosInside(blockX, blockZ);
+                if (prefabInstance?.prefab != null)
+                {
+                    // Use LocalizedName for friendly display name
+                    var localizedName = prefabInstance.prefab.LocalizedName;
+                    var difficultyTier = prefabInstance.prefab.DifficultyTier;
+                    _cachedPOITier = difficultyTier;
+                    
+                    if (!string.IsNullOrEmpty(localizedName))
+                    {
+                        // Format with tier if present: "The McCormick Residence ☠☠"
+                        if (difficultyTier > 0)
+                            return $"{localizedName} {new string('☠', difficultyTier)}";
+                        return localizedName;
+                    }
+                }
+                
+                // Method 2: Try GetPrefabsAtXZ in case we're at the edge
+                var prefabs = new System.Collections.Generic.List<PrefabInstance>();
+                decorator.GetPrefabsAtXZ(blockX - 1, blockX + 1, blockZ - 1, blockZ + 1, prefabs);
+                
+                if (prefabs.Count > 0)
+                {
+                    // Check if player is actually inside any of these prefabs
+                    foreach (var prefab in prefabs)
+                    {
+                        if (IsPlayerInsidePrefab(prefab, blockX, blockZ))
+                        {
+                            var localizedName = prefab.prefab?.LocalizedName;
+                            var difficultyTier = prefab.prefab?.DifficultyTier ?? 0;
+                            _cachedPOITier = difficultyTier;
+                            
+                            if (!string.IsNullOrEmpty(localizedName))
+                            {
+                                if (difficultyTier > 0)
+                                    return $"{localizedName} {new string('☠', difficultyTier)}";
+                                return localizedName;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            // Log error for debugging
+            UnityEngine.Debug.LogWarning($"[HemSoft QoL] POI detection error: {ex.Message}");
+        }
+
+        _cachedPOITier = 0;
+        return "Exploring";
+    }
+    
+    private bool IsPlayerInsidePrefab(PrefabInstance prefab, int playerX, int playerZ)
+    {
+        if (prefab == null) return false;
+        
+        var bbPos = prefab.boundingBoxPosition;
+        var bbSize = prefab.boundingBoxSize;
+        
+        return playerX >= bbPos.x && playerX < bbPos.x + bbSize.x &&
+               playerZ >= bbPos.z && playerZ < bbPos.z + bbSize.z;
+    }
+
+    /// <summary>
+    /// Updates session time display.
+    /// NOTE: 7D2D V2.5 does not persist total playtime across sessions - only session time is available.
+    /// </summary>
+    private void UpdateSession(World world)
+    {
+        if (world == null || _player == null) return;
+
+        var oldSession = _cachedSession;
+        
+        // Initialize session start time on first call
+        if (_sessionStartTime < 0)
+        {
+            _sessionStartTime = Time.realtimeSinceStartup;
+        }
+        
+        // Calculate current session time
+        var sessionSeconds = Time.realtimeSinceStartup - _sessionStartTime;
+        var totalMinutes = (int)(sessionSeconds / 60f);
+        
+        var hours = totalMinutes / 60;
+        var minutes = totalMinutes % 60;
+        
+        _cachedSession = hours > 0 ? $"{hours}h {minutes}m" : $"{minutes}m";
+
+        if (oldSession != _cachedSession)
+            _isDirty = true;
     }
 
     private int CalculateNextBloodMoon(int currentDay)

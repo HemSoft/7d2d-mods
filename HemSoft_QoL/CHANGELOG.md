@@ -2,6 +2,11 @@
 
 All notable changes to HemSoft QoL will be documented in this file.
 
+## [1.5.0] - 2026-01-11
+
+### Added
+- Documented loot and resource harvesting event hooks for future features
+
 ## [1.4.0] - 2026-01-10
 
 ### Added

@@ -3,6 +3,7 @@
   HemSoft QoL - Info Panel Display Configuration
   
   Set enabled="true" to show, enabled="false" to hide each element.
+  PanelWidth: Width of the info panel in pixels (default: 140)
 -->
 <InfoPanelConfig>
   <Display>
@@ -13,5 +14,10 @@
     <BloodMoon enabled="true" />
     <Kills enabled="true" />
     <NearestEnemy enabled="true" />
+    <Biome enabled="false" />
+    <POI enabled="true" />
+    <Coords enabled="false" />
+    <Session enabled="true" />
   </Display>
+  <PanelWidth value="140" />
 </InfoPanelConfig>
