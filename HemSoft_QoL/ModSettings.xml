@@ -110,6 +110,8 @@
                 value="Hide" defaultValue="Hide" leftValue="Hide" rightValue="Show" />
         <Switch name="ShowSession" displayKey="hemsoftqol_show_session" tooltipKey="hemsoftqol_show_session_tt"
                 value="Show" defaultValue="Show" leftValue="Hide" rightValue="Show" />
+        <Switch name="ShowLootstagePopup" displayKey="hemsoftqol_show_lootpopup" tooltipKey="hemsoftqol_show_lootpopup_tt"
+                value="Show" defaultValue="Show" leftValue="Hide" rightValue="Show" />
       </Category>
       
       <Category name="PanelSettings" displayKey="hemsoftqol_cat_panelsettings" tooltipKey="hemsoftqol_cat_panelsettings_tt">

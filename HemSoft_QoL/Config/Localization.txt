@@ -41,6 +41,8 @@ hemsoftqol_show_coords,HemSoftQoL,Settings,False,False,Show Coordinates,Setting 
 hemsoftqol_show_coords_tt,HemSoftQoL,Settings,False,False,Display your current X and Z coordinates,Tooltip for coordinates setting
 hemsoftqol_show_session,HemSoftQoL,Settings,False,False,Show Session Time,Setting to show session time
 hemsoftqol_show_session_tt,HemSoftQoL,Settings,False,False,Display your current session playtime (resets on game restart),Tooltip for session time setting
+hemsoftqol_show_lootpopup,HemSoftQoL,Settings,False,False,Lootstage Change Popup,Setting to enable lootstage change notification
+hemsoftqol_show_lootpopup_tt,HemSoftQoL,Settings,False,False,Show a popup notification when your lootstage increases or decreases,Tooltip for lootstage popup setting
 hemsoftqol_cat_panelsettings,HemSoftQoL,Settings,False,False,Panel Settings,Category for info panel appearance settings
 hemsoftqol_cat_panelsettings_tt,HemSoftQoL,Settings,False,False,Adjust the appearance of the info panel,Tooltip for panel settings category
 hemsoftqol_panel_width,HemSoftQoL,Settings,False,False,Panel Width,Setting for panel width

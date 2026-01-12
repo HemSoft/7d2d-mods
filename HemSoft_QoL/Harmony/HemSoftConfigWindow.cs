@@ -52,6 +52,7 @@ Usage:
   hs poi          - Toggle POI/Location display
   hs coords       - Toggle Coordinates display
   hs session      - Toggle Session time display
+  hs lootpopup    - Toggle Lootstage Change Popup
   hs all          - Show all info panel elements
   hs none         - Hide all info panel elements
 
@@ -131,6 +132,10 @@ Current Hotkeys (when container is open):
                 config.ShowSession = !config.ShowSession;
                 message = $"Session: {(config.ShowSession ? "ON" : "OFF")}";
                 break;
+            case "lootpopup":
+                config.ShowLootstagePopup = !config.ShowLootstagePopup;
+                message = $"Lootstage Popup: {(config.ShowLootstagePopup ? "ON" : "OFF")}";
+                break;
             case "all":
                 message = EnableAll(config);
                 break;
@@ -193,6 +198,7 @@ Current Hotkeys (when container is open):
         console.Output($"  Blood Moon: {OnOff(config.ShowBloodMoon)}");
         console.Output($"  Kills:      {OnOff(config.ShowKills)}");
         console.Output($"  Enemy:      {OnOff(config.ShowNearestEnemy)}");
+        console.Output($"  Loot Popup: {OnOff(config.ShowLootstagePopup)}");
         console.Output($"  Biome:      {OnOff(config.ShowBiome)}");
         console.Output($"  POI:        {OnOff(config.ShowPOI)}");
         console.Output($"  Coords:     {OnOff(config.ShowCoords)}");
@@ -230,6 +236,7 @@ public class DisplayConfig
     public bool ShowPOI { get; set; } = true;
     public bool ShowCoords { get; set; } = false;
     public bool ShowSession { get; set; } = true;
+    public bool ShowLootstagePopup { get; set; } = true;
     public int PanelWidth { get; set; } = 140;
 
     private string _modPath;
@@ -307,6 +314,7 @@ public class DisplayConfig
             config.ShowDay = ParseGearsSetting(category, "ShowDay", true);
             config.ShowBloodMoon = ParseGearsSetting(category, "ShowBloodMoon", true);
             config.ShowKills = ParseGearsSetting(category, "ShowKills", true);
+            config.ShowLootstagePopup = ParseGearsSetting(category, "ShowLootstagePopup", true);
             config.ShowNearestEnemy = ParseGearsSetting(category, "ShowNearestEnemy", true);
             config.ShowBiome = ParseGearsSetting(category, "ShowBiome", false);
             config.ShowPOI = ParseGearsSetting(category, "ShowPOI", true);
@@ -361,6 +369,7 @@ public class DisplayConfig
         config.ShowLootstage = ParseLegacyBool(doc, "Lootstage", true);
         config.ShowDay = ParseLegacyBool(doc, "Day", true);
         config.ShowBloodMoon = ParseLegacyBool(doc, "BloodMoon", true);
+        config.ShowLootstagePopup = ParseLegacyBool(doc, "LootstagePopup", true);
         config.ShowKills = ParseLegacyBool(doc, "Kills", true);
         config.ShowNearestEnemy = ParseLegacyBool(doc, "NearestEnemy", true);
         config.ShowBiome = ParseLegacyBool(doc, "Biome", false);
@@ -422,6 +431,7 @@ public class DisplayConfig
             UpdateGearsSwitch(category, "ShowKills", ShowKills);
             UpdateGearsSwitch(category, "ShowNearestEnemy", ShowNearestEnemy);
             UpdateGearsSwitch(category, "ShowBiome", ShowBiome);
+            UpdateGearsSwitch(category, "ShowLootstagePopup", ShowLootstagePopup);
             UpdateGearsSwitch(category, "ShowPOI", ShowPOI);
             UpdateGearsSwitch(category, "ShowCoords", ShowCoords);
             UpdateGearsSwitch(category, "ShowSession", ShowSession);
@@ -475,6 +485,7 @@ public class DisplayConfig
             AddDisplayElement(doc, display, "Gamestage", ShowGamestage);
             AddDisplayElement(doc, display, "Lootstage", ShowLootstage);
             AddDisplayElement(doc, display, "Day", ShowDay);
+            AddDisplayElement(doc, display, "LootstagePopup", ShowLootstagePopup);
             AddDisplayElement(doc, display, "BloodMoon", ShowBloodMoon);
             AddDisplayElement(doc, display, "Kills", ShowKills);
             AddDisplayElement(doc, display, "NearestEnemy", ShowNearestEnemy);

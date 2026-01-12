@@ -138,6 +138,32 @@ Empty `key=""` disables a hotkey:
 
 > **⚠️ IMPORTANT**: Never stop or kill the game process without asking first! The user may have unsaved progress.
 
+## Development Workflow
+
+**CRITICAL**: After making ANY code changes, ALWAYS follow this workflow:
+
+1. **Build the mod**:
+   ```powershell
+   cd HemSoft_QoL
+   dotnet build -c Release
+   ```
+   - If build fails, fix compilation errors before proceeding
+   - Never leave the project in a non-compiling state
+
+2. **Deploy the mod**:
+   ```powershell
+   .\deploy.ps1
+   ```
+   - If deployment fails with "file in use" errors, the game is running
+   - Inform the user they need to close the game and run [deploy.ps1](HemSoft_QoL/deploy.ps1) manually
+   - **DO NOT** attempt to kill the game process - user may have unsaved progress
+
+3. **Verify deployment**:
+   - Check that files were copied to `C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\S_HemSoft_QoL`
+   - Confirm the DLL size matches the built version
+
+This workflow ensures code changes are properly compiled and deployed before the user tests them in-game.
+
 ## Reference Resources
 
 - **SphereII.Mods (SCore)**: https://github.com/SphereII/SphereII.Mods - extensive Harmony examples
