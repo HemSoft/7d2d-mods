@@ -115,8 +115,33 @@
       </Category>
       
       <Category name="PanelSettings" displayKey="hemsoftqol_cat_panelsettings" tooltipKey="hemsoftqol_cat_panelsettings_tt">
-        <IntSlider name="PanelWidth" displayKey="hemsoftqol_panel_width" tooltipKey="hemsoftqol_panel_width_tt"
-                   value="140" defaultValue="140" min="100" max="300" step="10" />
+        <Selector name="PanelWidth" displayKey="hemsoftqol_panel_width" tooltipKey="hemsoftqol_panel_width_tt"
+                  value="140" defaultValue="140" wrap="true">
+          <Property type="arrayValues" allowedValues="100,110,120,130,140,150,160,170,180,190,200,220,240,260,280,300" />
+        </Selector>
+      </Category>
+      
+      <Category name="LootstageNotification" displayKey="hemsoftqol_cat_lootnotif" tooltipKey="hemsoftqol_cat_lootnotif_tt">
+        <Selector name="NotificationX" displayKey="hemsoftqol_notif_x" tooltipKey="hemsoftqol_notif_x_tt"
+                  value="960" defaultValue="960" wrap="true">
+          <Property type="arrayValues" allowedValues="0,200,400,600,800,960,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000,3200,3440" />
+        </Selector>
+        <Selector name="NotificationY" displayKey="hemsoftqol_notif_y" tooltipKey="hemsoftqol_notif_y_tt"
+                  value="650" defaultValue="650" wrap="true">
+          <Property type="arrayValues" allowedValues="0,50,100,150,200,300,400,500,600,650,700,800,900,1000,1100,1200,1300,1440" />
+        </Selector>
+        <Selector name="NotificationWidth" displayKey="hemsoftqol_notif_width" tooltipKey="hemsoftqol_notif_width_tt"
+                  value="800" defaultValue="800" wrap="true">
+          <Property type="arrayValues" allowedValues="400,500,600,700,800,900,1000,1100,1200" />
+        </Selector>
+        <Selector name="NotificationTitleFontSize" displayKey="hemsoftqol_notif_titlefont" tooltipKey="hemsoftqol_notif_titlefont_tt"
+                  value="36" defaultValue="36" wrap="true">
+          <Property type="arrayValues" allowedValues="18,20,22,24,26,28,30,32,34,36,38,40,44,48,52,56,60,64,68,72" />
+        </Selector>
+        <Selector name="NotificationValueFontSize" displayKey="hemsoftqol_notif_valuefont" tooltipKey="hemsoftqol_notif_valuefont_tt"
+                  value="32" defaultValue="32" wrap="true">
+          <Property type="arrayValues" allowedValues="16,18,20,22,24,26,28,30,32,34,36,40,44,48,52,56,60,64" />
+        </Selector>
       </Category>
       
     </Tab>

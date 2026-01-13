@@ -132,56 +132,31 @@
         </rect>
     </append>
 
-    <!-- Lootstage Change Popup Notification -->
-    <append xpath="/windows">
-        <window name="hemsoft_lootstage_popup" 
-                width="350" height="120" 
-                controller="XUiC_HemSoftLootstagePopup, HemSoft_QoL"
-                cursor_area="true">
+    <!-- Lootstage Change Notification (Non-blocking HUD element) -->
+    <!-- WORKING COORDINATES (visible at bottom-center): pos="0,50" anchor="CenterTop" -->
+    <!-- FINAL POSITION: pos="960,650" (centered near top, 800x160 size) -->
+    <append xpath="/windows/window[@name='HUDLeftStatBars' or @name='RWSUI_LeftHUD']">
+        <rect name="hemsoft_lootstage_notification" 
+              controller="XUiC_HemSoftLootstagePopup, HemSoft_QoL"
+              pos="960,650" width="800" height="160" visible="{notificationvisible}"
+              depth="100">
             
-            <!-- Center the popup on screen -->
-            <panel pos="0,0" width="350" height="120" anchor="CenterCenter" depth="100">
-                
-                <!-- Semi-transparent dark background with border -->
-                <sprite depth="1" name="background" sprite="ui_game_panel_background" 
-                        color="20,20,25,240" pos="0,0" width="350" height="120" />
-                <sprite depth="2" name="border" sprite="ui_game_panel_header" 
-                        color="100,200,100,255" pos="0,0" width="350" height="120" />
-                
-                <!-- Title bar with gradient background -->
-                <sprite depth="3" name="titlebar" sprite="menu_empty" 
-                        color="50,120,50,255" pos="5,-5" width="340" height="30" />
-                
-                <!-- Title text -->
-                <label depth="4" pos="10,-8" width="330" height="25" 
-                       font_size="20" color="{lootstagecolor}" text="{lootstagemessage}" 
-                       justify="center" font="ReferenceFont" style="bold" />
-                
-                <!-- Lootstage change details -->
-                <label depth="4" pos="20,-45" width="310" height="25" 
-                       font_size="18" color="200,200,200,255" 
-                       text="Better loot will now drop!" 
-                       justify="center" font="ReferenceFont" />
-                
-                <!-- Old and new lootstage display -->
-                <rect pos="75,-75" width="200" height="30">
-                    <label depth="4" pos="0,0" width="60" height="25" 
-                           font_size="16" color="180,180,180,255" text="Lootstage:" 
-                           justify="left" />
-                    
-                    <label depth="4" pos="65,0" width="40" height="25" 
-                           font_size="18" color="200,150,100,255" text="{oldlootstage}" 
-                           justify="right" font="ReferenceFont" />
-                    
-                    <label depth="4" pos="105,0" width="30" height="25" 
-                           font_size="18" color="150,150,150,255" text="→" 
-                           justify="center" font="ReferenceFont" />
-                    
-                    <label depth="4" pos="135,0" width="40" height="25" 
-                           font_size="18" color="{lootstagecolor}" text="{newlootstage}" 
-                           justify="left" font="ReferenceFont" style="bold" />
-                </rect>
-            </panel>
-        </window>
+            <!-- Semi-transparent background with alpha for fade -->
+            <sprite depth="90" name="background" sprite="ui_game_panel_background" 
+                    color="{notificationbackground}" pos="0,0" width="800" height="160" />
+            <sprite depth="91" name="border" sprite="ui_game_panel_header" 
+                    color="{notificationborder}" pos="0,0" width="800" height="160" />
+            
+            <!-- Title text -->
+            <label depth="92" pos="20,-16" width="760" height="50" 
+                   font_size="36" color="{lootstagecolor}" text="{lootstagemessage}" 
+                   justify="center" font="ReferenceFont" style="bold" />
+            
+            <!-- Old and new lootstage display -->
+            <label depth="92" pos="200,-80" width="400" height="40" 
+                   font_size="32" color="180,180,180,255" 
+                   text="Lootstage: {oldlootstage} → {newlootstage}" 
+                   justify="center" font="ReferenceFont" />
+        </rect>
     </append>
 </configs>

@@ -2,15 +2,23 @@
 
 All notable changes to HemSoft QoL will be documented in this file.
 
-## [1.6.0] - 2026-01-12
+## [1.6.0] - 2026-01-13
 
 ### Added
-- **Lootstage Change Popup** - Shows a notification when your lootstage increases or decreases
-  - Displays old → new lootstage value
-  - Color-coded (green for increase, red for decrease)
-  - Auto-dismisses after 5 seconds
-  - Can be disabled with `hs lootpopup` console command
-  - Toggle via Gears mod settings UI (if installed)
+- **Lootstage Change Notification** - Non-blocking HUD notification when your lootstage changes
+  - Displays "Lootstage: old → new" with color-coded message (green for increase, red for decrease)
+  - 10-second display duration with 2-second fade-out
+  - Console commands:
+    - `hs lootpopup` - Toggle notifications on/off
+    - `hs lootpos X Y` - Adjust notification position in real-time
+  - Gears mod settings (if Gears is installed):
+    - Toggle notification on/off
+    - Adjust X position (0-3440)
+    - Adjust Y position (0-1440)
+    - Adjust notification width (400-1200)
+    - Adjust title font size (18-72)
+    - Adjust value font size (16-64)
+    - Adjust info panel width (100-300)
 
 ## [1.5.0] - 2026-01-11
 

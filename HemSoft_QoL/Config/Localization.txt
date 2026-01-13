@@ -47,3 +47,15 @@ hemsoftqol_cat_panelsettings,HemSoftQoL,Settings,False,False,Panel Settings,Cate
 hemsoftqol_cat_panelsettings_tt,HemSoftQoL,Settings,False,False,Adjust the appearance of the info panel,Tooltip for panel settings category
 hemsoftqol_panel_width,HemSoftQoL,Settings,False,False,Panel Width,Setting for panel width
 hemsoftqol_panel_width_tt,HemSoftQoL,Settings,False,False,Width of the info panel in pixels (100-300),Tooltip for panel width setting
+hemsoftqol_cat_lootnotif,HemSoftQoL,Settings,False,False,Lootstage Notification,Category for lootstage notification appearance settings
+hemsoftqol_cat_lootnotif_tt,HemSoftQoL,Settings,False,False,Customize the position and appearance of the lootstage change notification,Tooltip for notification settings category
+hemsoftqol_notif_x,HemSoftQoL,Settings,False,False,Notification X Position,Setting for notification horizontal position
+hemsoftqol_notif_x_tt,HemSoftQoL,Settings,False,False,Horizontal position of the notification (0 = left edge),Tooltip for notification X setting
+hemsoftqol_notif_y,HemSoftQoL,Settings,False,False,Notification Y Position,Setting for notification vertical position
+hemsoftqol_notif_y_tt,HemSoftQoL,Settings,False,False,Vertical position of the notification (0 = top edge),Tooltip for notification Y setting
+hemsoftqol_notif_width,HemSoftQoL,Settings,False,False,Notification Width,Setting for notification width
+hemsoftqol_notif_width_tt,HemSoftQoL,Settings,False,False,Width of the notification panel in pixels (400-1200),Tooltip for notification width setting
+hemsoftqol_notif_titlefont,HemSoftQoL,Settings,False,False,Title Font Size,Setting for notification title font size
+hemsoftqol_notif_titlefont_tt,HemSoftQoL,Settings,False,False,Font size for the notification title (18-72),Tooltip for title font setting
+hemsoftqol_notif_valuefont,HemSoftQoL,Settings,False,False,Value Font Size,Setting for notification values font size
+hemsoftqol_notif_valuefont_tt,HemSoftQoL,Settings,False,False,Font size for the lootstage values (16-64),Tooltip for value font setting

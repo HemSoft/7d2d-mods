@@ -136,6 +136,23 @@ Current Hotkeys (when container is open):
                 config.ShowLootstagePopup = !config.ShowLootstagePopup;
                 message = $"Lootstage Popup: {(config.ShowLootstagePopup ? "ON" : "OFF")}";
                 break;
+            case "lootpos":
+                // Console command to adjust notification position: hs lootpos 1500 -200
+                if (_params.Count >= 3 && 
+                    float.TryParse(_params[1], out float x) && 
+                    float.TryParse(_params[2], out float y))
+                {
+                    XUiC_HemSoftLootstagePopup.PositionX = x;
+                    XUiC_HemSoftLootstagePopup.PositionY = y;
+                    message = $"Lootstage notification position: ({x}, {y})";
+                }
+                else
+                {
+                    message = $"Current position: ({XUiC_HemSoftLootstagePopup.PositionX}, {XUiC_HemSoftLootstagePopup.PositionY})\n" +
+                              "Usage: hs lootpos <X> <Y> (e.g., hs lootpos 1500 -200)";
+                }
+                SingletonMonoBehaviour<SdtdConsole>.Instance.Output(message);
+                return;
             case "all":
                 message = EnableAll(config);
                 break;
@@ -238,6 +255,13 @@ public class DisplayConfig
     public bool ShowSession { get; set; } = true;
     public bool ShowLootstagePopup { get; set; } = true;
     public int PanelWidth { get; set; } = 140;
+    
+    // Lootstage notification settings
+    public int NotificationX { get; set; } = 960;
+    public int NotificationY { get; set; } = 650;
+    public int NotificationWidth { get; set; } = 800;
+    public int NotificationTitleFontSize { get; set; } = 36;
+    public int NotificationValueFontSize { get; set; } = 32;
 
     private string _modPath;
 
@@ -331,6 +355,17 @@ public class DisplayConfig
                     config.PanelWidth = width;
                 }
             }
+            
+            // Load lootstage notification settings from LootstageNotification category
+            var notifSettings = modNode.SelectSingleNode(".//Tab[@name='Info Panel']//Category[@name='LootstageNotification']");
+            if (notifSettings != null)
+            {
+                config.NotificationX = ParseGearsIntSetting(notifSettings, "NotificationX", 960);
+                config.NotificationY = ParseGearsIntSetting(notifSettings, "NotificationY", 650);
+                config.NotificationWidth = ParseGearsIntSetting(notifSettings, "NotificationWidth", 800);
+                config.NotificationTitleFontSize = ParseGearsIntSetting(notifSettings, "NotificationTitleFontSize", 36);
+                config.NotificationValueFontSize = ParseGearsIntSetting(notifSettings, "NotificationValueFontSize", 32);
+            }
 
             HemSoftQoL.Log($"Loaded display settings: Level={config.ShowLevel}, GS={config.ShowGamestage}, LS={config.ShowLootstage}, Day={config.ShowDay}, BM={config.ShowBloodMoon}, Kills={config.ShowKills}, Enemy={config.ShowNearestEnemy}, Width={config.PanelWidth}");
 
@@ -354,6 +389,19 @@ public class DisplayConfig
 
         var value = settingNode.Attributes["value"].Value;
         return value.Equals("Show", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Parse an integer Setting element from Gears global settings.
+    /// </summary>
+    private static int ParseGearsIntSetting(XmlNode category, string name, int defaultValue)
+    {
+        var settingNode = category.SelectSingleNode($"Setting[@name='{name}']");
+        if (settingNode?.Attributes?["value"] != null && int.TryParse(settingNode.Attributes["value"].Value, out var value))
+        {
+            return value;
+        }
+        return defaultValue;
     }
 
     /// <summary>

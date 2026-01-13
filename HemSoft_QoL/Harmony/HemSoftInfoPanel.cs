@@ -184,7 +184,7 @@ public class XUiC_HemSoftInfoPanel : XUiController
         // Detect lootstage change and trigger popup
         if (newLootstage != _cachedLootstage && _cachedLootstage > 0)
         {
-            // Lootstage changed! Show popup notification
+            // Lootstage changed! Show popup notification (skip if initial load)
             ShowLootstagePopup(newLootstage, _cachedLootstage);
         }
 
@@ -855,9 +855,6 @@ public class XUiC_HemSoftInfoPanel : XUiController
     {
         try
         {
-            var windowManager = xui?.playerUI?.windowManager;
-            if (windowManager == null) return;
-
             // Check if lootstage notifications are enabled
             var config = HemSoftQoL.DisplayConfig;
             if (config?.ShowLootstagePopup != true)
@@ -866,27 +863,24 @@ public class XUiC_HemSoftInfoPanel : XUiController
                 return;
             }
 
-            // Open the popup window
-            var window = windowManager.GetWindow("hemsoft_lootstage_popup");
-            if (window == null)
+            // Find the notification controller - it's a child of the same window group as this panel
+            // Both hemsoft_info_panel and hemsoft_lootstage_notification are siblings under the same HUD window
+            var notificationController = windowGroup?.Controller
+                ?.GetChildById("hemsoft_lootstage_notification") as XUiC_HemSoftLootstagePopup;
+
+            if (notificationController == null)
             {
-                HemSoftQoL.LogError("Lootstage popup window not found - check XUi config");
+                HemSoftQoL.LogError("Lootstage notification controller not found - check XUi config");
                 return;
             }
 
-            // Pass data to the popup controller
-            var windowGroup = window as XUiWindowGroup;
-            if (windowGroup?.Controller is XUiC_HemSoftLootstagePopup popupController)
-            {
-                popupController.ShowNotification(newLootstage, oldLootstage);
-            }
-
-            windowManager.Open("hemsoft_lootstage_popup", true);
-            HemSoftQoL.Log($"Lootstage popup shown: {oldLootstage} → {newLootstage}");
+            // Show the notification
+            notificationController.ShowNotification(newLootstage, oldLootstage);
+            HemSoftQoL.Log($"Lootstage notification shown: {oldLootstage} → {newLootstage}");
         }
         catch (Exception ex)
         {
-            HemSoftQoL.LogError($"Failed to show lootstage popup: {ex.Message}");
+            HemSoftQoL.LogError($"Failed to show lootstage notification: {ex.Message}");
         }
     }
 }
