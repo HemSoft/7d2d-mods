@@ -52,7 +52,6 @@ Usage:
   hs poi          - Toggle POI/Location display
   hs coords       - Toggle Coordinates display
   hs session      - Toggle Session time display
-  hs lootpopup    - Toggle Lootstage Change Popup
   hs all          - Show all info panel elements
   hs none         - Hide all info panel elements
 
@@ -132,27 +131,6 @@ Current Hotkeys (when container is open):
                 config.ShowSession = !config.ShowSession;
                 message = $"Session: {(config.ShowSession ? "ON" : "OFF")}";
                 break;
-            case "lootpopup":
-                config.ShowLootstagePopup = !config.ShowLootstagePopup;
-                message = $"Lootstage Popup: {(config.ShowLootstagePopup ? "ON" : "OFF")}";
-                break;
-            case "lootpos":
-                // Console command to adjust notification position: hs lootpos 1500 -200
-                if (_params.Count >= 3 && 
-                    float.TryParse(_params[1], out float x) && 
-                    float.TryParse(_params[2], out float y))
-                {
-                    XUiC_HemSoftLootstagePopup.PositionX = x;
-                    XUiC_HemSoftLootstagePopup.PositionY = y;
-                    message = $"Lootstage notification position: ({x}, {y})";
-                }
-                else
-                {
-                    message = $"Current position: ({XUiC_HemSoftLootstagePopup.PositionX}, {XUiC_HemSoftLootstagePopup.PositionY})\n" +
-                              "Usage: hs lootpos <X> <Y> (e.g., hs lootpos 1500 -200)";
-                }
-                SingletonMonoBehaviour<SdtdConsole>.Instance.Output(message);
-                return;
             case "all":
                 message = EnableAll(config);
                 break;
@@ -214,8 +192,7 @@ Current Hotkeys (when container is open):
         console.Output($"  Day:        {OnOff(config.ShowDay)}");
         console.Output($"  Blood Moon: {OnOff(config.ShowBloodMoon)}");
         console.Output($"  Kills:      {OnOff(config.ShowKills)}");
-        console.Output($"  Enemy:      {OnOff(config.ShowNearestEnemy)}");
-        console.Output($"  Loot Popup: {OnOff(config.ShowLootstagePopup)}");
+        console.Output($"  Enemy:      {OnOff(config.ShowNearestEnemy)}");;
         console.Output($"  Biome:      {OnOff(config.ShowBiome)}");
         console.Output($"  POI:        {OnOff(config.ShowPOI)}");
         console.Output($"  Coords:     {OnOff(config.ShowCoords)}");
@@ -253,16 +230,8 @@ public class DisplayConfig
     public bool ShowPOI { get; set; } = true;
     public bool ShowCoords { get; set; } = false;
     public bool ShowSession { get; set; } = true;
-    public bool ShowLootstagePopup { get; set; } = true;
     public int PanelWidth { get; set; } = 140;
     
-    // Lootstage notification settings
-    public int NotificationX { get; set; } = 960;
-    public int NotificationY { get; set; } = 650;
-    public int NotificationWidth { get; set; } = 800;
-    public int NotificationTitleFontSize { get; set; } = 36;
-    public int NotificationValueFontSize { get; set; } = 32;
-
     private string _modPath;
 
     /// <summary>
@@ -338,7 +307,6 @@ public class DisplayConfig
             config.ShowDay = ParseGearsSetting(category, "ShowDay", true);
             config.ShowBloodMoon = ParseGearsSetting(category, "ShowBloodMoon", true);
             config.ShowKills = ParseGearsSetting(category, "ShowKills", true);
-            config.ShowLootstagePopup = ParseGearsSetting(category, "ShowLootstagePopup", true);
             config.ShowNearestEnemy = ParseGearsSetting(category, "ShowNearestEnemy", true);
             config.ShowBiome = ParseGearsSetting(category, "ShowBiome", false);
             config.ShowPOI = ParseGearsSetting(category, "ShowPOI", true);
@@ -346,28 +314,6 @@ public class DisplayConfig
             config.ShowSession = ParseGearsSetting(category, "ShowSession", true);
             
             // Load panel width from PanelSettings category
-            var panelSettings = modNode.SelectSingleNode(".//Tab[@name='Info Panel']//Category[@name='PanelSettings']");
-            if (panelSettings != null)
-            {
-                var widthNode = panelSettings.SelectSingleNode("Setting[@name='PanelWidth']");
-                if (widthNode?.Attributes?["value"] != null && int.TryParse(widthNode.Attributes["value"].Value, out var width))
-                {
-                    config.PanelWidth = width;
-                }
-            }
-            
-            // Load lootstage notification settings from LootstageNotification category
-            var notifSettings = modNode.SelectSingleNode(".//Tab[@name='Info Panel']//Category[@name='LootstageNotification']");
-            if (notifSettings != null)
-            {
-                config.NotificationX = ParseGearsIntSetting(notifSettings, "NotificationX", 960);
-                config.NotificationY = ParseGearsIntSetting(notifSettings, "NotificationY", 650);
-                config.NotificationWidth = ParseGearsIntSetting(notifSettings, "NotificationWidth", 800);
-                config.NotificationTitleFontSize = ParseGearsIntSetting(notifSettings, "NotificationTitleFontSize", 36);
-                config.NotificationValueFontSize = ParseGearsIntSetting(notifSettings, "NotificationValueFontSize", 32);
-            }
-
-            HemSoftQoL.Log($"Loaded display settings: Level={config.ShowLevel}, GS={config.ShowGamestage}, LS={config.ShowLootstage}, Day={config.ShowDay}, BM={config.ShowBloodMoon}, Kills={config.ShowKills}, Enemy={config.ShowNearestEnemy}, Width={config.PanelWidth}");
 
             return true;
         }
@@ -417,7 +363,6 @@ public class DisplayConfig
         config.ShowLootstage = ParseLegacyBool(doc, "Lootstage", true);
         config.ShowDay = ParseLegacyBool(doc, "Day", true);
         config.ShowBloodMoon = ParseLegacyBool(doc, "BloodMoon", true);
-        config.ShowLootstagePopup = ParseLegacyBool(doc, "LootstagePopup", true);
         config.ShowKills = ParseLegacyBool(doc, "Kills", true);
         config.ShowNearestEnemy = ParseLegacyBool(doc, "NearestEnemy", true);
         config.ShowBiome = ParseLegacyBool(doc, "Biome", false);
@@ -479,7 +424,6 @@ public class DisplayConfig
             UpdateGearsSwitch(category, "ShowKills", ShowKills);
             UpdateGearsSwitch(category, "ShowNearestEnemy", ShowNearestEnemy);
             UpdateGearsSwitch(category, "ShowBiome", ShowBiome);
-            UpdateGearsSwitch(category, "ShowLootstagePopup", ShowLootstagePopup);
             UpdateGearsSwitch(category, "ShowPOI", ShowPOI);
             UpdateGearsSwitch(category, "ShowCoords", ShowCoords);
             UpdateGearsSwitch(category, "ShowSession", ShowSession);
@@ -533,7 +477,6 @@ public class DisplayConfig
             AddDisplayElement(doc, display, "Gamestage", ShowGamestage);
             AddDisplayElement(doc, display, "Lootstage", ShowLootstage);
             AddDisplayElement(doc, display, "Day", ShowDay);
-            AddDisplayElement(doc, display, "LootstagePopup", ShowLootstagePopup);
             AddDisplayElement(doc, display, "BloodMoon", ShowBloodMoon);
             AddDisplayElement(doc, display, "Kills", ShowKills);
             AddDisplayElement(doc, display, "NearestEnemy", ShowNearestEnemy);

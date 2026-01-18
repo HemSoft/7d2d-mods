@@ -28,7 +28,7 @@ namespace HemSoft.QoL
             ModPath = _modInstance.Path;
             ModName = Path.GetFileName(ModPath); // e.g., "S_HemSoft_QoL"
 
-            Log($"Initializing v1.6.0...");
+            Log($"Initializing v1.7.0...");
 
             // Check if Gears mod settings framework is present
             // Gears stores user settings in %APPDATA%/7DaysToDie/Gears/ModSettings.xml

@@ -2,12 +2,20 @@
 
 All notable changes to HemSoft QoL will be documented in this file.
 
+## [1.7.0] - 2026-01-13
+
+### Added
+- **Info Panel Zoom** - Scale the info panel with Ctrl++ and Ctrl+-
+  - Zoom range: 50% to 300% in 10% increments
+  - Zoom level persists across game sessions
+  - Uses transform scaling for uniform appearance
+
 ## [1.6.0] - 2026-01-13
 
 ### Added
 - **Lootstage Change Notification** - Non-blocking HUD notification when your lootstage changes
   - Displays "Lootstage: old → new" with color-coded message (green for increase, red for decrease)
-  - 10-second display duration with 2-second fade-out
+  - 6-second display duration with 2-second fade-out
   - Console commands:
     - `hs lootpopup` - Toggle notifications on/off
     - `hs lootpos X Y` - Adjust notification position in real-time
