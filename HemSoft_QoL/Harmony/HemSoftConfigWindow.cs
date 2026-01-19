@@ -230,7 +230,15 @@ public class DisplayConfig
     public bool ShowPOI { get; set; } = true;
     public bool ShowCoords { get; set; } = false;
     public bool ShowSession { get; set; } = true;
+    public bool ShowLootstagePopup { get; set; } = true;
     public int PanelWidth { get; set; } = 140;
+    
+    // Notification position settings
+    public int NotificationX { get; set; } = 960;
+    public int NotificationY { get; set; } = 650;
+    public int NotificationWidth { get; set; } = 800;
+    public int NotificationTitleFontSize { get; set; } = 36;
+    public int NotificationValueFontSize { get; set; } = 32;
     
     private string _modPath;
 
@@ -249,7 +257,7 @@ public class DisplayConfig
             {
                 if (TryLoadFromGearsSettings(config))
                 {
-                    HemSoftQoL.Log($"Display configuration loaded from Gears settings");
+                    HemSoftQoL.Log($"Display config loaded from Gears - LootstagePopup={config.ShowLootstagePopup}");
                     return config;
                 }
             }
@@ -258,11 +266,11 @@ public class DisplayConfig
             if (File.Exists(legacyPath))
             {
                 LoadFromLegacyConfig(legacyPath, config);
-                HemSoftQoL.Log($"Display configuration loaded from InfoPanelConfig.xml (legacy)");
+                HemSoftQoL.Log($"Display config loaded from legacy - LootstagePopup={config.ShowLootstagePopup}");
             }
             else
             {
-                HemSoftQoL.Log($"No display config found, using defaults.");
+                HemSoftQoL.Log($"No display config found, using defaults (LootstagePopup={config.ShowLootstagePopup})");
             }
         }
         catch (Exception ex)
@@ -312,8 +320,25 @@ public class DisplayConfig
             config.ShowPOI = ParseGearsSetting(category, "ShowPOI", true);
             config.ShowCoords = ParseGearsSetting(category, "ShowCoords", false);
             config.ShowSession = ParseGearsSetting(category, "ShowSession", true);
+            config.ShowLootstagePopup = ParseGearsSetting(category, "ShowLootstagePopup", true);
+            
+            // Load notification position from LootstageNotification category
+            var notifCategory = modNode.SelectSingleNode(".//Tab[@name='Info Panel']//Category[@name='LootstageNotification']");
+            if (notifCategory != null)
+            {
+                config.NotificationX = ParseGearsIntSetting(notifCategory, "NotificationX", 960);
+                config.NotificationY = ParseGearsIntSetting(notifCategory, "NotificationY", 650);
+                config.NotificationWidth = ParseGearsIntSetting(notifCategory, "NotificationWidth", 800);
+                config.NotificationTitleFontSize = ParseGearsIntSetting(notifCategory, "NotificationTitleFontSize", 36);
+                config.NotificationValueFontSize = ParseGearsIntSetting(notifCategory, "NotificationValueFontSize", 32);
+            }
             
             // Load panel width from PanelSettings category
+            var panelCategory = modNode.SelectSingleNode(".//Tab[@name='Info Panel']//Category[@name='PanelSettings']");
+            if (panelCategory != null)
+            {
+                config.PanelWidth = ParseGearsIntSetting(panelCategory, "PanelWidth", 140);
+            }
 
             return true;
         }
@@ -325,12 +350,17 @@ public class DisplayConfig
     }
 
     /// <summary>
-    /// Parse a Setting element from Gears global settings.
+    /// Parse a Switch or Setting element from Gears global settings.
     /// Values are "Show"/"Hide" for display toggles.
     /// </summary>
     private static bool ParseGearsSetting(XmlNode category, string name, bool defaultValue)
     {
-        var settingNode = category.SelectSingleNode($"Setting[@name='{name}']");
+        // Try Switch first (used for Show/Hide toggles)
+        var settingNode = category.SelectSingleNode($"Switch[@name='{name}']");
+        // Fall back to Setting element
+        if (settingNode == null)
+            settingNode = category.SelectSingleNode($"Setting[@name='{name}']");
+            
         if (settingNode?.Attributes?["value"] == null) return defaultValue;
 
         var value = settingNode.Attributes["value"].Value;
@@ -338,11 +368,16 @@ public class DisplayConfig
     }
 
     /// <summary>
-    /// Parse an integer Setting element from Gears global settings.
+    /// Parse an integer Setting or Selector element from Gears global settings.
     /// </summary>
     private static int ParseGearsIntSetting(XmlNode category, string name, int defaultValue)
     {
-        var settingNode = category.SelectSingleNode($"Setting[@name='{name}']");
+        // Try Selector first (used for numeric dropdowns)
+        var settingNode = category.SelectSingleNode($"Selector[@name='{name}']");
+        // Fall back to Setting element
+        if (settingNode == null)
+            settingNode = category.SelectSingleNode($"Setting[@name='{name}']");
+            
         if (settingNode?.Attributes?["value"] != null && int.TryParse(settingNode.Attributes["value"].Value, out var value))
         {
             return value;
@@ -369,6 +404,7 @@ public class DisplayConfig
         config.ShowPOI = ParseLegacyBool(doc, "POI", true);
         config.ShowCoords = ParseLegacyBool(doc, "Coords", false);
         config.ShowSession = ParseLegacyBool(doc, "Session", true);
+        config.ShowLootstagePopup = ParseLegacyBool(doc, "LootstagePopup", true);
         
         // Load panel width
         var widthNode = doc.SelectSingleNode("//PanelWidth");
@@ -427,6 +463,7 @@ public class DisplayConfig
             UpdateGearsSwitch(category, "ShowPOI", ShowPOI);
             UpdateGearsSwitch(category, "ShowCoords", ShowCoords);
             UpdateGearsSwitch(category, "ShowSession", ShowSession);
+            UpdateGearsSwitch(category, "ShowLootstagePopup", ShowLootstagePopup);
 
             doc.Save(path);
             HemSoftQoL.Log($"Display config saved to ModSettings.xml (Gears)");
@@ -484,6 +521,7 @@ public class DisplayConfig
             AddDisplayElement(doc, display, "POI", ShowPOI);
             AddDisplayElement(doc, display, "Coords", ShowCoords);
             AddDisplayElement(doc, display, "Session", ShowSession);
+            AddDisplayElement(doc, display, "LootstagePopup", ShowLootstagePopup);
 
             doc.Save(path);
             HemSoftQoL.Log($"Display config saved to {path}");

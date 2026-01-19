@@ -49,16 +49,12 @@ public class XUiC_HemSoftInfoPanel : XUiController
     private static bool _positionMode;
     private static Vector2i _customPosition = new Vector2i(190, 170);
     private static int _customWidth = 140; // Custom panel width
-    private static float _zoomScale = 1.0f; // Zoom scale (1.0 = 100%, 1.5 = 150%)
     private static bool _positionLoaded;
     private const int MoveStep = 5;
     private const int MoveStepFast = 20;
     private const int WidthStep = 10;
     private const int WidthMin = 100;
     private const int WidthMax = 300;
-    private const float ZoomStep = 0.1f;
-    private const float ZoomMin = 0.5f;
-    private const float ZoomMax = 3.0f;
     
     // Layout constants
     private const int TitleHeight = 28;
@@ -81,7 +77,6 @@ public class XUiC_HemSoftInfoPanel : XUiController
         }
 
         ApplyPosition();
-        ApplyZoom();
         HemSoftQoL.Log("InfoPanel controller initialized");
     }
 
@@ -97,25 +92,6 @@ public class XUiC_HemSoftInfoPanel : XUiController
         {
             _configCheckTimer = 0f;
             CheckConfigReload();
-        }
-
-        // Handle zoom (Ctrl++ and Ctrl+-)
-        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
-        {
-            if (Input.GetKeyDown(KeyCode.Equals) || Input.GetKeyDown(KeyCode.KeypadPlus))
-            {
-                _zoomScale = Mathf.Clamp(_zoomScale + ZoomStep, ZoomMin, ZoomMax);
-                ApplyZoom();
-                SavePosition();
-                HemSoftQoL.Log($"Panel zoom: {(_zoomScale * 100):F0}%");
-            }
-            else if (Input.GetKeyDown(KeyCode.Minus) || Input.GetKeyDown(KeyCode.KeypadMinus))
-            {
-                _zoomScale = Mathf.Clamp(_zoomScale - ZoomStep, ZoomMin, ZoomMax);
-                ApplyZoom();
-                SavePosition();
-                HemSoftQoL.Log($"Panel zoom: {(_zoomScale * 100):F0}%");
-            }
         }
 
         // Handle position mode toggle (Alt+P)
@@ -204,6 +180,13 @@ public class XUiC_HemSoftInfoPanel : XUiController
         var newLootstage = _player.GetHighestPartyLootStage(0f, 0f);
         var newDay = GameUtils.WorldTimeToDays(world.worldTime);
         var newKills = _player.KilledZombies;
+
+        // Detect lootstage change and trigger popup
+        if (newLootstage != _cachedLootstage && _cachedLootstage > 0)
+        {
+            // Lootstage changed! Show popup notification
+            ShowLootstagePopup(newLootstage, _cachedLootstage);
+        }
 
         if (newLevel != _cachedLevel || newGamestage != _cachedGamestage ||
             newLootstage != _cachedLootstage || newDay != _cachedDay || newKills != _cachedZombieKills)
@@ -418,14 +401,6 @@ public class XUiC_HemSoftInfoPanel : XUiController
         }
     }
 
-    private void ApplyZoom()
-    {
-        if (ViewComponent?.UiTransform != null)
-        {
-            ViewComponent.UiTransform.localScale = new Vector3(_zoomScale, _zoomScale, 1f);
-        }
-    }
-
     private static string GetConfigPath()
     {
         return Path.Combine(HemSoftQoL.ModPath, "Config", "InfoPanelPosition.xml");
@@ -450,10 +425,8 @@ public class XUiC_HemSoftInfoPanel : XUiController
                     _customPosition.y = y;
                 if (int.TryParse(node.Attributes["width"]?.Value, out var width))
                     _customWidth = Mathf.Clamp(width, WidthMin, WidthMax);
-                if (float.TryParse(node.Attributes["zoom"]?.Value, out var zoom))
-                    _zoomScale = Mathf.Clamp(zoom, ZoomMin, ZoomMax);
 
-                HemSoftQoL.Log($"InfoPanel position loaded: {_customPosition.x}, {_customPosition.y}, width: {_customWidth}, zoom: {(_zoomScale * 100):F0}%");
+                HemSoftQoL.Log($"InfoPanel position loaded: {_customPosition.x}, {_customPosition.y}, width: {_customWidth}");
             }
         }
         catch
@@ -478,11 +451,10 @@ public class XUiC_HemSoftInfoPanel : XUiController
             pos.SetAttribute("x", _customPosition.x.ToString());
             pos.SetAttribute("y", _customPosition.y.ToString());
             pos.SetAttribute("width", _customWidth.ToString());
-            pos.SetAttribute("zoom", _zoomScale.ToString("F2"));
             root.AppendChild(pos);
 
             doc.Save(path);
-            HemSoftQoL.Log($"InfoPanel position saved: {_customPosition.x}, {_customPosition.y}, width: {_customWidth}, zoom: {(_zoomScale * 100):F0}%");
+            HemSoftQoL.Log($"InfoPanel position saved: {_customPosition.x}, {_customPosition.y}, width: {_customWidth}");
         }
         catch (System.Exception ex)
         {
@@ -761,16 +733,17 @@ public class XUiC_HemSoftInfoPanel : XUiController
                 var prefabInstance = decorator.GetPrefabFromWorldPosInside(blockX, blockZ);
                 if (prefabInstance?.prefab != null)
                 {
-                    var poiName = GetBestPOIName(prefabInstance);
+                    // Use LocalizedName for friendly display name
+                    var localizedName = prefabInstance.prefab.LocalizedName;
                     var difficultyTier = prefabInstance.prefab.DifficultyTier;
                     _cachedPOITier = difficultyTier;
                     
-                    if (!string.IsNullOrEmpty(poiName))
+                    if (!string.IsNullOrEmpty(localizedName))
                     {
                         // Format with tier if present: "The McCormick Residence ☠☠"
                         if (difficultyTier > 0)
-                            return $"{poiName} {new string('☠', difficultyTier)}";
-                        return poiName;
+                            return $"{localizedName} {new string('☠', difficultyTier)}";
+                        return localizedName;
                     }
                 }
                 
@@ -785,15 +758,15 @@ public class XUiC_HemSoftInfoPanel : XUiController
                     {
                         if (IsPlayerInsidePrefab(prefab, blockX, blockZ))
                         {
-                            var poiName = GetBestPOIName(prefab);
+                            var localizedName = prefab.prefab?.LocalizedName;
                             var difficultyTier = prefab.prefab?.DifficultyTier ?? 0;
                             _cachedPOITier = difficultyTier;
                             
-                            if (!string.IsNullOrEmpty(poiName))
+                            if (!string.IsNullOrEmpty(localizedName))
                             {
                                 if (difficultyTier > 0)
-                                    return $"{poiName} {new string('☠', difficultyTier)}";
-                                return poiName;
+                                    return $"{localizedName} {new string('☠', difficultyTier)}";
+                                return localizedName;
                             }
                         }
                     }
@@ -808,48 +781,6 @@ public class XUiC_HemSoftInfoPanel : XUiController
 
         _cachedPOITier = 0;
         return "Exploring";
-    }
-    
-    /// <summary>
-    /// Gets the best available display name for a POI from various sources.
-    /// Fallback order: LocalizedName → PrefabName (cleaned)
-    /// </summary>
-    private string GetBestPOIName(PrefabInstance prefabInstance)
-    {
-        if (prefabInstance?.prefab == null) return null;
-        
-        // Try LocalizedName first (best for user-facing display)
-        var localizedName = prefabInstance.prefab.LocalizedName;
-        if (!string.IsNullOrEmpty(localizedName) && !localizedName.StartsWith("rwg_tile"))
-            return localizedName;
-        
-        // Try PrefabName and clean it up (fallback)
-        var prefabName = prefabInstance.prefab.PrefabName;
-        if (!string.IsNullOrEmpty(prefabName))
-        {
-            // Clean up prefab names like "rwg_tile_gateway_t" → "Trader"
-            if (prefabName.Contains("trader") || prefabName.Contains("gateway"))
-                return "Trader";
-            
-            // Remove common prefixes
-            prefabName = prefabName.Replace("rwg_tile_", "").Replace("part_", "");
-            
-            // Capitalize and replace underscores
-            if (!string.IsNullOrEmpty(prefabName))
-            {
-                prefabName = prefabName.Replace("_", " ");
-                // Capitalize first letter of each word
-                var words = prefabName.Split(' ');
-                for (int i = 0; i < words.Length; i++)
-                {
-                    if (words[i].Length > 0)
-                        words[i] = char.ToUpper(words[i][0]) + words[i].Substring(1);
-                }
-                return string.Join(" ", words);
-            }
-        }
-        
-        return null;
     }
     
     private bool IsPlayerInsidePrefab(PrefabInstance prefab, int playerX, int playerZ)
@@ -917,4 +848,121 @@ public class XUiC_HemSoftInfoPanel : XUiController
         _player = null;
     }
 
+    /// <summary>
+    /// Shows a popup notification when lootstage changes.
+    /// </summary>
+    private void ShowLootstagePopup(int newLootstage, int oldLootstage)
+    {
+        HemSoftQoL.Log($"[POPUP] === POPUP TRIGGER START ===");
+        HemSoftQoL.Log($"[POPUP] ShowLootstagePopup called: {oldLootstage} → {newLootstage}");
+        
+        // ASSUMPTION: Config should be loaded
+        var config = HemSoftQoL.DisplayConfig;
+        HemSoftQoL.Log($"[ASSUME] DisplayConfig loaded: EXPECT=true, ACTUAL={config != null}");
+        
+        // Check if lootstage notifications are enabled
+        if (config?.ShowLootstagePopup != true)
+        {
+            HemSoftQoL.Log($"[POPUP] Popup disabled in config (ShowLootstagePopup={config?.ShowLootstagePopup})");
+            return;
+        }
+        HemSoftQoL.Log($"[ASSUME] ShowLootstagePopup enabled: EXPECT=true, ACTUAL={config?.ShowLootstagePopup}");
+
+        try
+        {
+            // ASSUMPTION: windowGroup should exist (we're running inside a window)
+            HemSoftQoL.Log($"[ASSUME] windowGroup exists: EXPECT=true, ACTUAL={windowGroup != null}");
+            HemSoftQoL.Log($"[ASSUME] windowGroup.Controller exists: EXPECT=true, ACTUAL={windowGroup?.Controller != null}");
+            
+            if (windowGroup == null)
+            {
+                HemSoftQoL.LogError("[POPUP] FATAL: windowGroup is null - this controller is not attached to a window!");
+                return;
+            }
+            
+            // ASSUMPTION: windowGroup should be the HUD window
+            var wgId = windowGroup.ID ?? "null";
+            HemSoftQoL.Log($"[ASSUME] windowGroup.ID: EXPECT='HUDLeftStatBars' or 'RWSUI_LeftHUD', ACTUAL='{wgId}'");
+            
+            if (windowGroup.Controller != null)
+            {
+                // List all children for debugging
+                var controller = windowGroup.Controller;
+                var controllerId = controller.ViewComponent?.ID ?? "null";
+                var controllerType = controller.GetType().Name;
+                HemSoftQoL.Log($"[POPUP] WindowGroup.Controller: ID='{controllerId}', Type={controllerType}");
+                
+                // ASSUMPTION: Our notification rect should be a child
+                HemSoftQoL.Log($"[ASSUME] hemsoft_lootstage_notification should be in Children list below:");
+                
+                // Try to enumerate children
+                var childCount = 0;
+                var foundNotification = false;
+                foreach (var child in controller.Children)
+                {
+                    childCount++;
+                    var childId = child?.ViewComponent?.ID ?? "null";
+                    var childType = child?.GetType().Name ?? "null";
+                    HemSoftQoL.Log($"[POPUP] Child #{childCount}: ID='{childId}', Type={childType}");
+                    
+                    if (childId == "hemsoft_lootstage_notification")
+                    {
+                        foundNotification = true;
+                        HemSoftQoL.Log($"[ASSUME] FOUND target child at index {childCount}");
+                        
+                        // Check if it's the right type
+                        var isCorrectType = child is XUiC_HemSoftLootstagePopup;
+                        HemSoftQoL.Log($"[ASSUME] Child is XUiC_HemSoftLootstagePopup: EXPECT=true, ACTUAL={isCorrectType}");
+                        if (!isCorrectType)
+                        {
+                            HemSoftQoL.LogError($"[ASSUME] TYPE MISMATCH: Expected XUiC_HemSoftLootstagePopup, got {childType}");
+                        }
+                    }
+                }
+                HemSoftQoL.Log($"[POPUP] Total children: {childCount}");
+                HemSoftQoL.Log($"[ASSUME] hemsoft_lootstage_notification found in children: EXPECT=true, ACTUAL={foundNotification}");
+            }
+            else
+            {
+                HemSoftQoL.LogError("[POPUP] windowGroup.Controller is null!");
+            }
+            
+            // Find the notification controller - it's a sibling rect under the same HUD window
+            HemSoftQoL.Log($"[POPUP] Calling GetChildById('hemsoft_lootstage_notification')...");
+            var rawChild = windowGroup?.Controller?.GetChildById("hemsoft_lootstage_notification");
+            HemSoftQoL.Log($"[ASSUME] GetChildById returned non-null: EXPECT=true, ACTUAL={rawChild != null}");
+            
+            if (rawChild != null)
+            {
+                HemSoftQoL.Log($"[POPUP] Raw child type: {rawChild.GetType().FullName}");
+            }
+            
+            var notificationController = rawChild as XUiC_HemSoftLootstagePopup;
+            HemSoftQoL.Log($"[ASSUME] Cast to XUiC_HemSoftLootstagePopup succeeded: EXPECT=true, ACTUAL={notificationController != null}");
+
+            if (notificationController == null)
+            {
+                HemSoftQoL.LogError("[POPUP] Notification controller not found or wrong type!");
+                HemSoftQoL.LogError("[POPUP] Possible causes:");
+                HemSoftQoL.LogError("[POPUP]   1. XML not loaded (check for XUi parse errors)");
+                HemSoftQoL.LogError("[POPUP]   2. Wrong element ID in XML");
+                HemSoftQoL.LogError("[POPUP]   3. Controller class not found (check assembly name in XML)");
+                HemSoftQoL.LogError("[POPUP]   4. Controller type mismatch");
+                return;
+            }
+
+            HemSoftQoL.Log($"[POPUP] Found controller successfully: {notificationController.GetType().Name}");
+            
+            // Show the notification
+            HemSoftQoL.Log($"[POPUP] Calling ShowNotification({newLootstage}, {oldLootstage})...");
+            notificationController.ShowNotification(newLootstage, oldLootstage);
+            HemSoftQoL.Log($"[POPUP] ShowNotification completed successfully");
+            HemSoftQoL.Log($"[POPUP] === POPUP TRIGGER END ===");
+        }
+        catch (Exception ex)
+        {
+            HemSoftQoL.LogError($"[POPUP] EXCEPTION: {ex.GetType().Name}: {ex.Message}");
+            HemSoftQoL.LogError($"[POPUP] Stack: {ex.StackTrace}");
+        }
+    }
 }
