@@ -409,18 +409,54 @@ public class XUiC_HemSoftLootstagePopup : XUiController
                 value = $"180,180,180,{_currentAlpha}";
                 return true;
 
+            // Position bindings from config
+            case "notificationx":
+                value = (config?.NotificationX ?? 960).ToString();
+                Log($"[BIND-CFG] notificationx = {value}");
+                return true;
+
+            case "notificationy":
+                value = (config?.NotificationY ?? 650).ToString();
+                Log($"[BIND-CFG] notificationy = {value}");
+                return true;
+
             // Font size bindings from config
             case "notificationtitlefontsize":
                 value = (config?.NotificationTitleFontSize ?? 36).ToString();
+                Log($"[BIND-CFG] notificationtitlefontsize = {value}");
+                return true;
+
+            case "notificationsubtitlefontsize":
+                // Subtitle is typically smaller than title
+                value = ((config?.NotificationTitleFontSize ?? 36) - 10).ToString();
+                Log($"[BIND-CFG] notificationsubtitlefontsize = {value}");
                 return true;
 
             case "notificationvaluefontsize":
                 value = (config?.NotificationValueFontSize ?? 32).ToString();
+                Log($"[BIND-CFG] notificationvaluefontsize = {value}");
                 return true;
 
             // Dimension bindings from config
             case "notificationwidth":
                 value = (config?.NotificationWidth ?? 700).ToString();
+                Log($"[BIND-CFG] notificationwidth = {value}");
+                return true;
+
+            case "notificationheight":
+                // Height is fixed for now, could be made configurable
+                value = "110";
+                return true;
+
+            // Derived widths (based on main width)
+            case "titlebarwidth":
+                // Title bar is main width minus 8px padding
+                value = ((config?.NotificationWidth ?? 700) - 8).ToString();
+                return true;
+
+            case "contentwidth":
+                // Content area is main width minus 20px padding
+                value = ((config?.NotificationWidth ?? 700) - 20).ToString();
                 return true;
 
             default:
@@ -434,77 +470,22 @@ public class XUiC_HemSoftLootstagePopup : XUiController
     }
 
     /// <summary>
-    /// Apply layout and position the notification from config settings.
+    /// Log current config values for diagnostics.
+    /// Note: Actual layout is handled by XUi bindings in windows.xml.
     /// </summary>
     private void ApplyLayout()
     {
-        Log($"[LAYOUT] ApplyLayout called");
+        var config = HemSoftQoL.DisplayConfig;
         
-        try
-        {
-            if (ViewComponent == null)
-            {
-                Log($"[LAYOUT] ERROR: ViewComponent is null!");
-                return;
-            }
-            
-            if (ViewComponent.UiTransform == null)
-            {
-                Log($"[LAYOUT] ERROR: UiTransform is null!");
-                return;
-            }
-            
-            var config = HemSoftQoL.DisplayConfig;
-            int x = config?.NotificationX ?? 960;
-            int y = config?.NotificationY ?? 650;
-            int width = config?.NotificationWidth ?? 700;
-            
-            // Log screen bounds check
-            var screenW = UnityEngine.Screen.width;
-            var screenH = UnityEngine.Screen.height;
-            Log($"[LAYOUT] Screen: {screenW}x{screenH}, Target pos: ({x},{y}), width={width}");
-            
-            if (x < 0 || x > screenW || y < 0 || y > screenH)
-            {
-                Log($"[LAYOUT] WARNING: Position ({x},{y}) may be outside screen bounds!");
-            }
-            
-            var oldPos = ViewComponent.UiTransform.localPosition;
-            Log($"[LAYOUT] Old localPosition: {oldPos}");
-            
-            // Set position from config
-            ViewComponent.UiTransform.localPosition = new UnityEngine.Vector3(x, y, 0);
-            
-            var newPos = ViewComponent.UiTransform.localPosition;
-            Log($"[LAYOUT] New localPosition: {newPos}");
-            
-            // Also log world position
-            var worldPos = ViewComponent.UiTransform.position;
-            Log($"[LAYOUT] World position: {worldPos}");
-            
-            // Try to resize the rect
-            var rectTransform = ViewComponent.UiTransform as UnityEngine.RectTransform;
-            if (rectTransform != null)
-            {
-                var oldSize = rectTransform.sizeDelta;
-                rectTransform.sizeDelta = new UnityEngine.Vector2(width, 110);
-                var newSize = rectTransform.sizeDelta;
-                Log($"[LAYOUT] Size: {oldSize} → {newSize}");
-                Log($"[LAYOUT] Anchors: min={rectTransform.anchorMin}, max={rectTransform.anchorMax}");
-                Log($"[LAYOUT] Pivot: {rectTransform.pivot}");
-            }
-            else
-            {
-                Log($"[LAYOUT] WARNING: UiTransform is not a RectTransform (type={ViewComponent.UiTransform.GetType().Name})");
-            }
-            
-            Log($"[LAYOUT] Complete: pos=({x},{y}), width={width}");
-        }
-        catch (System.Exception ex)
-        {
-            Log($"[LAYOUT] EXCEPTION: {ex.GetType().Name}: {ex.Message}");
-            Log($"[LAYOUT] Stack: {ex.StackTrace}");
-        }
+        // Log config values that will be used by bindings
+        Log($"[LAYOUT] Config values for bindings:");
+        Log($"[LAYOUT]   Position: ({config?.NotificationX ?? 960}, {config?.NotificationY ?? 650})");
+        Log($"[LAYOUT]   Width: {config?.NotificationWidth ?? 700}");
+        Log($"[LAYOUT]   Title font: {config?.NotificationTitleFontSize ?? 36}");
+        Log($"[LAYOUT]   Value font: {config?.NotificationValueFontSize ?? 32}");
+        Log($"[LAYOUT]   Screen: {UnityEngine.Screen.width}x{UnityEngine.Screen.height}");
+        
+        // Layout is now handled by XUi bindings - no manual transform manipulation needed
     }
 
     private static void Log(string message)

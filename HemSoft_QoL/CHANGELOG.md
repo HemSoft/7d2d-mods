@@ -2,6 +2,19 @@
 
 All notable changes to HemSoft QoL will be documented in this file.
 
+## [1.9.0] - 2026-01-19
+
+### Fixed
+- **Lootstage Notification Sizing** - Font sizes and dimensions now properly apply from config
+  - Replaced hardcoded XML values with dynamic bindings
+  - Title, subtitle, and value font sizes now correctly respond to Gears settings
+  - Notification width properly scales all internal elements
+  - Fixed centering of bottom text line when using custom widths
+
+### Improved
+- Finer X position control for lootstage notification (50px increments instead of 200px)
+- Simplified notification layout code - removed manual transform manipulation in favor of XUi bindings
+
 ## [1.7.0] - 2026-01-13
 
 ### Added

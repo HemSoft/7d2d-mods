@@ -133,36 +133,37 @@
     </append>
 
     <!-- Lootstage Change Notification (HUD-embedded, non-blocking) -->
+    <!-- Font sizes and width come from config bindings: notificationtitlefontsize, notificationvaluefontsize, notificationwidth -->
     <append xpath="/windows/window[@name='HUDLeftStatBars' or @name='RWSUI_LeftHUD']">
         <rect name="hemsoft_lootstage_notification" 
               controller="XUiC_HemSoftLootstagePopup, HemSoft_QoL"
-              pos="760,600" width="700" height="110" 
+              pos="{notificationx},{notificationy}" width="{notificationwidth}" height="{notificationheight}" 
               visible="{notificationvisible}" depth="50">
             
             <!-- Semi-transparent dark background with border -->
             <sprite depth="1" name="background" sprite="ui_game_panel_background" 
-                    color="{notificationbackground}" pos="0,0" width="700" height="110" />
+                    color="{notificationbackground}" pos="0,0" width="{notificationwidth}" height="{notificationheight}" />
             <sprite depth="2" name="border" sprite="ui_game_panel_header" 
-                    color="{notificationborder}" pos="0,0" width="700" height="110" />
+                    color="{notificationborder}" pos="0,0" width="{notificationwidth}" height="{notificationheight}" />
             
             <!-- Title bar -->
             <sprite depth="3" name="titlebar" sprite="menu_empty" 
-                    color="{notificationtitlebar}" pos="4,-4" width="692" height="32" />
+                    color="{notificationtitlebar}" pos="4,-4" width="{titlebarwidth}" height="32" />
             
             <!-- Title text -->
-            <label depth="4" name="titleLabel" pos="10,-6" width="680" height="30" 
-                   font_size="28" color="{lootstagecolor}" text="{lootstagemessage}" 
+            <label depth="4" name="titleLabel" pos="10,-6" width="{contentwidth}" height="30" 
+                   font_size="{notificationtitlefontsize}" color="{lootstagecolor}" text="{lootstagemessage}" 
                    justify="center" font="ReferenceFont" />
             
             <!-- Subtitle (dynamic based on increase/decrease) -->
-            <label depth="4" name="subtitleLabel" pos="20,-40" width="660" height="26" 
-                   font_size="18" color="{subtitlecolor}" 
+            <label depth="4" name="subtitleLabel" pos="10,-40" width="{contentwidth}" height="26" 
+                   font_size="{notificationsubtitlefontsize}" color="{subtitlecolor}" 
                    text="{lootstagesubtitle}" 
                    justify="center" font="ReferenceFont" />
             
             <!-- Old and new lootstage display -->
-            <label depth="4" name="valueLabel" pos="50,-72" width="600" height="30" 
-                   font_size="24" color="{valuecolor}" 
+            <label depth="4" name="valueLabel" pos="10,-72" width="{contentwidth}" height="30" 
+                   font_size="{notificationvaluefontsize}" color="{valuecolor}" 
                    text="Lootstage: {oldlootstage} → {newlootstage}" 
                    justify="center" font="ReferenceFont" />
         </rect>

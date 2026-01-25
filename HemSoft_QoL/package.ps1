@@ -4,7 +4,7 @@
 $ErrorActionPreference = "Stop"
 $AssemblyName = "HemSoft_QoL"  # DLL name
 $ModName = "S_HemSoft_QoL"       # Deployed folder name
-$Version = "1.8.0"
+$Version = "1.9.0"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
 
